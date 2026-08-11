@@ -1,0 +1,68 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h1 class="page-title mb-1">Promotions & Offers</h1>
+        <p class="text-muted small mb-0">Create, manage, and track promotional marketing offers for store products.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('main.add_offer') }}" class="btn btn-primary">+ Create New Offer</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="card-title-text">Active Offers ({{ offers|length }})</span>
+        <span class="badge badge-secondary">Promotions</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Offer Title</th>
+                    <th>Description</th>
+                    <th>Validity Period</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for offer in offers %}
+                <tr>
+                    <td class="fw-bold text-dark">{{ offer.title }}</td>
+                    <td class="text-muted small">{{ offer.description or 'No description provided.' }}</td>
+                    <td class="font-mono small">
+                        {{ offer.start_date }} → {{ offer.end_date }}
+                    </td>
+                    <td>
+                        {% if offer.active %}
+                            <span class="badge badge-success">● Active</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="d-inline-flex gap-2">
+                            <a href="{{ url_for('main.edit_offer', offer_id=offer.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+                            {% if current_user.role and current_user.role.name == 'Admin' %}
+                            <form method="POST" action="{{ url_for('main.delete_offer', offer_id=offer.id) }}" onsubmit="return confirm('Delete offer campaign?');" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state-box py-5">
+                            <p class="mb-0 text-muted">No offers configured yet.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

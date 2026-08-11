@@ -1,0 +1,70 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">{{ 'Edit Offer Campaign' if offer else 'Create New Offer' }}</h1>
+        <p class="text-muted small mb-0">Configure promotional details, valid dates, and targeted products.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('main.offers') }}" class="btn btn-secondary">← Back to Offers</a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title-text">{{ 'Update Offer Configuration' if offer else 'New Offer Details' }}</span>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Offer Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="title" value="{{ offer.title if offer else '' }}" required placeholder="e.g. Festival Special 15% Cashback Offer">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Campaign Status</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input custom-orange-checkbox" type="checkbox" name="active" id="active" value="true" {% if not offer or offer.active %}checked{% endif %}>
+                                <label class="form-check-label fw-semibold" for="active">Active Campaign</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Offer Description</label>
+                            <textarea class="form-control" name="description" rows="3" placeholder="Enter terms and promotional details...">{{ offer.description if offer else '' }}</textarea>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control font-mono" name="start_date" value="{{ offer.start_date if offer else '' }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control font-mono" name="end_date" value="{{ offer.end_date if offer else '' }}">
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Target Products</label>
+                            <select class="form-select" name="product_ids" multiple size="4">
+                                {% for p in products %}
+                                    <option value="{{ p.id }}" {% if offer and p.id in offer.product_ids %}selected{% endif %}>{{ p.name }} ({{ p.brand.name if p.brand else 'General' }})</option>
+                                {% endfor %}
+                            </select>
+                            <span class="form-text">Hold Ctrl / Cmd to select multiple products.</span>
+                        </div>
+
+                        <div class="col-12 mt-4 pt-2 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary px-4">Save Offer</button>
+                            <a href="{{ url_for('main.offers') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

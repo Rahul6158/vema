@@ -1,0 +1,62 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">{{ 'Edit User Profile' if user else 'Add New User' }}</h1>
+        <p class="text-muted small mb-0">Configure user account credentials, contact info, and permission roles.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('main.users') }}" class="btn btn-secondary">← Back to Users</a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title-text">{{ 'Update Account Information' if user else 'User Credentials & Info' }}</span>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" value="{{ user.name if user else '' }}" required placeholder="e.g. Rahul Sharma">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control font-mono" name="email" value="{{ user.email if user else '' }}" required placeholder="user@example.com">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control font-mono" name="phone" value="{{ user.phone if user else '' }}" placeholder="+91 9876543210">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Access Role <span class="text-danger">*</span></label>
+                            <select class="form-select" name="role_id" required>
+                                <option value="">-- Select Role --</option>
+                                {% for r in roles %}
+                                    <option value="{{ r.id }}" {% if user and user.role_id == r.id %}selected{% endif %}>{{ r.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Password {% if user %}<span class="text-muted fw-normal">(Leave blank to keep unchanged)</span>{% else %}<span class="text-danger">*</span>{% endif %}</label>
+                            <input type="password" class="form-control" name="password" {% if not user %}required{% endif %} placeholder="Enter secure password">
+                        </div>
+
+                        <div class="col-12 mt-4 pt-2 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary px-4">Save User Account</button>
+                            <a href="{{ url_for('main.users') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

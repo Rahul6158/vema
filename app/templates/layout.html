@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VEMA — Vendor Management CRM</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='vema-tab-logo.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='vema-tab-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='vema-tab-logo.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='vema-tab-logo.png') }}">
+    <!-- Fonts & Styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+  </head>
+  <body>
+    {% if current_user.is_authenticated %}
+    <div class="d-flex min-vh-100">
+      
+      <!-- Left Orange Sidebar (Exact Match to Reference Image) -->
+      <aside class="app-sidebar-orange d-none d-lg-flex flex-column">
+        <!-- Logo Header -->
+        <div class="sidebar-header-orange">
+          <a href="{{ url_for('main.dashboard') }}" class="d-block text-center">
+            <img src="{{ url_for('static', filename='vema-logo.png') }}" alt="VEMA Logo" class="sidebar-brand-logo-white">
+          </a>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="sidebar-nav-orange">
+          <a class="nav-item-link {% if request.path == url_for('main.dashboard') %}active{% endif %}" href="{{ url_for('main.dashboard') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            <span>Dashboard</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.vendors')) %}active{% endif %}" href="{{ url_for('main.vendors') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Vendors</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.purchases')) %}active{% endif %}" href="{{ url_for('main.purchases') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/></svg>
+            <span>Purchase Orders</span>
+          </a>
+
+          <a class="nav-item-link" href="{{ url_for('main.purchases') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M21 8-9-4-9 4 9 4 9-4z"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/></svg>
+            <span>Goods Received</span>
+          </a>
+
+          <a class="nav-item-link" href="{{ url_for('main.purchases') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>Invoices</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.payments')) %}active{% endif %}" href="{{ url_for('main.payments') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <span>Payments</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.products')) %}active{% endif %}" href="{{ url_for('main.products') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            <span>Products</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.reports')) %}active{% endif %}" href="{{ url_for('main.reports') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Reports</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.reports')) %}active{% endif %}" href="{{ url_for('main.reports') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span>Analytics</span>
+          </a>
+
+          {% if current_user.role and current_user.role.name == 'Admin' %}
+            <a class="nav-item-link {% if request.path.startswith(url_for('main.users')) %}active{% endif %}" href="{{ url_for('main.users') }}">
+              <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Users</span>
+            </a>
+            <a class="nav-item-link {% if request.path.startswith(url_for('main.settings')) %}active{% endif %}" href="{{ url_for('main.settings') }}">
+              <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span>Settings</span>
+            </a>
+          {% endif %}
+        </nav>
+
+        <!-- Bottom User Footer -->
+        <div class="sidebar-footer-user">
+          <div class="user-avatar-circle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm0 4c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg>
+          </div>
+          <div class="overflow-hidden">
+            <div class="fw-bold text-white text-truncate" style="font-size: 0.9rem;">{{ current_user.name }}</div>
+            <div class="small text-white-50" style="font-size: 0.78rem;">{{ current_user.role.name if current_user.role else 'Admin' }}</div>
+          </div>
+          <a href="/logout" class="ms-auto text-white-50 text-decoration-none" title="Logout">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </a>
+        </div>
+      </aside>
+
+      <!-- Main Layout Workspace -->
+      <div class="flex-grow-1 d-flex flex-column" style="min-width: 0;">
+        
+        <!-- Clean White Header Navbar -->
+        <header class="top-app-header-clean">
+          <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+              <button class="btn border-0 p-0 d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              </button>
+              <div>
+                <h1 class="page-title mb-0" style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">
+                  {% block page_title %}Dashboard{% endblock %}
+                </h1>
+                <p class="text-muted small mb-0 d-none d-sm-block" style="font-size: 0.78rem;">
+                  {% block page_subtitle %}Welcome back, {{ current_user.name.split()[0] if current_user.name else 'Administrator' }}! Here's what's happening today.{% endblock %}
+                </p>
+              </div>
+            </div>
+
+            <!-- Top Right Controls -->
+            <div class="d-flex align-items-center gap-3">
+              <!-- Search Bar -->
+              <div class="header-search-box d-none d-md-flex">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" placeholder="Search anything...">
+              </div>
+
+              <!-- Bell Icon -->
+              <div class="icon-badge-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span class="icon-badge-count">3</span>
+              </div>
+
+              <!-- User Avatar Dropdown -->
+              <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-decoration-none" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                  <div class="rounded-circle bg-secondary bg-opacity-25 d-flex align-items-center justify-content-center text-dark font-mono fw-bold" style="width: 40px; height: 40px;">
+                    {{ current_user.name[:2].upper() if current_user.name else 'AD' }}
+                  </div>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="userMenu">
+                  <li><a class="dropdown-item" href="/profile">My Profile</a></li>
+                  <li><a class="dropdown-item" href="/change-password">Change Password</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-danger" href="/logout">Logout</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Main Workspace View -->
+        <main class="content px-4 py-4 flex-grow-1 main-content-container">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, msg in messages %}
+                <div class="alert alert-{{category}} alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+                  {{msg}}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+
+          {% block content %}{% endblock %}
+
+          <!-- Footer -->
+          <footer class="text-center py-4 text-muted small mt-auto border-top">
+            © 2026 VEMA Home Appliances. All rights reserved.
+          </footer>
+        </main>
+      </div>
+    </div>
+    {% else %}
+    <main class="w-100 min-vh-100 p-0 m-0 overflow-hidden position-relative">
+      {% block unauth_content %}{% endblock %}
+    </main>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Dynamic real-time client-side live search for all search inputs
+      const searchInputs = document.querySelectorAll('input[name="q"], .header-search-box input');
+      searchInputs.forEach(input => {
+        const form = input.closest('form');
+        if (form) {
+          input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              return false;
+            }
+          });
+        }
+
+        input.addEventListener('input', function() {
+          const query = this.value.toLowerCase().trim();
+          const tables = document.querySelectorAll('table tbody');
+          tables.forEach(tbody => {
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach(row => {
+              if (row.children.length === 1 && row.textContent.includes('No ')) return;
+              const text = row.textContent.toLowerCase();
+              if (query === '' || text.includes(query)) {
+                row.style.display = '';
+              } else {
+                row.style.display = 'none';
+              }
+            });
+          });
+        });
+      });
+    });
+    </script>
+  </body>
+</html>

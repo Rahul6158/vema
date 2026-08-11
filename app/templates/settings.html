@@ -1,0 +1,86 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">System Settings</h1>
+        <p class="text-muted small mb-0">Configure store profile, invoicing options, and WhatsApp API credentials.</p>
+    </div>
+</div>
+
+<form method="POST">
+    <div class="row g-4">
+        <!-- Store Information Card -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <span class="card-title-text">Store Profile & Invoicing</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Store / Company Name</label>
+                            <input type="text" class="form-control" name="store_name" value="{{ settings.get('store_name', '') }}" placeholder="VEMA Home Appliances Ltd">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Contact Phone</label>
+                            <input type="tel" class="form-control font-mono" name="store_phone" value="{{ settings.get('store_phone', '') }}" placeholder="+91 9876543210">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Contact Email</label>
+                            <input type="email" class="form-control font-mono" name="store_email" value="{{ settings.get('store_email', '') }}" placeholder="contact@vema.com">
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Store Address</label>
+                            <input type="text" class="form-control" name="store_address" value="{{ settings.get('store_address', '') }}" placeholder="123 Commercial Plaza, Main Street">
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Invoice Prefix</label>
+                            <input type="text" class="form-control font-mono" name="invoice_prefix" value="{{ settings.get('invoice_prefix', 'VEMA-INV-') }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WhatsApp API Credentials Card -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <span class="card-title-text">WhatsApp Business Integration</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label">WhatsApp Phone Number ID</label>
+                            <input type="text" class="form-control font-mono" name="whatsapp_phone_id" value="{{ settings.get('whatsapp_phone_id', '') }}">
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">WhatsApp Account ID</label>
+                            <input type="text" class="form-control font-mono" name="whatsapp_account_id" value="{{ settings.get('whatsapp_account_id', '') }}">
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">WhatsApp Permanent Access Token</label>
+                            <input type="password" class="form-control font-mono" name="whatsapp_access_token" value="{{ settings.get('whatsapp_access_token', '') }}">
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">WhatsApp Notification Template</label>
+                            <textarea class="form-control font-mono" name="message_template" rows="3">{{ settings.get('message_template', '') }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 text-end">
+            <button type="submit" class="btn btn-primary px-5 py-2.5">Save All Settings</button>
+        </div>
+    </div>
+</form>
+{% endblock %}

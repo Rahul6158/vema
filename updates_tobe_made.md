@@ -1,0 +1,5 @@
+- orange and white themed new design, add the logo to the app
+- 
+- add feature of send whatsapp message to customer
+- add feature of send whatsapp message to supplier
+- 

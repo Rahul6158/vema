@@ -1,0 +1,50 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">My Profile Settings</h1>
+        <p class="text-muted small mb-0">Update your personal information, phone number, and access credentials.</p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="card-title-text">Personal Details</span>
+                <span class="badge badge-secondary">{{ current_user.role.name if current_user.role else 'Staff' }}</span>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" name="name" value="{{ current_user.name }}" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Email Address (Primary Login)</label>
+                            <input type="email" class="form-control font-mono" value="{{ current_user.email }}" readonly disabled style="background-color: #f8fafc;">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control font-mono" name="phone" value="{{ current_user.phone or '' }}" placeholder="+91 9876543210">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">System Role</label>
+                            <input type="text" class="form-control" value="{{ current_user.role.name if current_user.role else 'Staff' }}" readonly disabled style="background-color: #f8fafc;">
+                        </div>
+
+                        <div class="col-12 mt-4 pt-2 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary px-4">Update Profile</button>
+                            <a href="/change-password" class="btn btn-secondary">Change Password</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

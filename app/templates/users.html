@@ -1,0 +1,86 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h1 class="page-title mb-1">User Management</h1>
+        <p class="text-muted small mb-0">Manage CRM user access credentials, roles, and administrative permissions.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('main.add_user') }}" class="btn btn-primary">+ Add New User</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="card-title-text">System Users ({{ users|length }})</span>
+        <span class="badge badge-secondary">Access Control</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email Address</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center fw-bold text-primary" style="width: 38px; height: 38px; font-size: 0.85rem; background: #fff7ed !important; border-color: rgba(234, 88, 12, 0.2) !important;">
+                                {{ u.name[:2].upper() if u.name else 'US' }}
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark">{{ u.name }}</div>
+                                <small class="text-muted font-mono" style="font-size: 0.75rem;">ID: #{{ u.id }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="font-mono small">{{ u.email }}</td>
+                    <td class="text-muted small">{{ u.phone or '—' }}</td>
+                    <td>
+                        {% if u.role and u.role.name == 'Admin' %}
+                            <span class="badge badge-danger">Admin</span>
+                        {% elif u.role and u.role.name == 'Manager' %}
+                            <span class="badge badge-warning">Manager</span>
+                        {% else %}
+                            <span class="badge badge-secondary">{{ u.role.name if u.role else 'Staff' }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.active %}
+                            <span class="badge badge-success">● Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary text-white">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="d-inline-flex gap-2">
+                            <a href="{{ url_for('main.edit_user', user_id=u.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+                            {% if current_user.id != u.id %}
+                            <form method="POST" action="{{ url_for('main.delete_user', user_id=u.id) }}" onsubmit="return confirm('Are you sure you want to delete this user?');" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state-box py-5">
+                            <p class="mb-0 text-muted">No users found in system.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

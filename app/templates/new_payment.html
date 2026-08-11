@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Record Vendor Payment</h1>
+        <p class="text-muted small mb-0">Payments logged here directly reduce the vendor's outstanding ledger balance.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('main.payments') }}" class="btn btn-secondary">← Back to Payments</a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title-text">New Payment Voucher Entry</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.add_payment') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Select Vendor <span class="text-danger">*</span></label>
+                        <select name="vendor_id" id="vendorSelect" class="form-select" required onchange="updateBalanceDisplay()">
+                            <option value="" data-balance="0">-- Select Vendor --</option>
+                            {% for v in vendors %}
+                                <option value="{{ v.id }}" data-balance="{{ v.outstanding_balance }}" {% if preselected_vendor_id == v.id %}selected{% endif %}>
+                                    {{ v.vendor_name }} (Outstanding: ₹{{ "{:,.2f}".format(v.outstanding_balance) }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Balance Formula Explainer Box -->
+                    <div class="card bg-light border p-3 mb-4">
+                        <div class="small text-secondary mb-1">Outstanding Balance Logic: <code>Balance = Invoices − Payments</code></div>
+                        <div class="fw-bold text-dark font-mono" id="currentBalanceDisplay">Current Outstanding: ₹0.00</div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Payment Date <span class="text-danger">*</span></label>
+                            <input type="date" name="payment_date" class="form-control font-mono" value="{{ today_date }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+                            <select name="payment_method" class="form-select" required>
+                                <option value="UPI">UPI / GPay / PhonePe</option>
+                                <option value="Bank Transfer">Bank Transfer (NEFT / RTGS / IMPS)</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Cheque">Cheque</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Amount Paid (₹) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" name="amount_paid" class="form-control form-control-lg font-mono fw-bold text-success" placeholder="0.00" min="0.01" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Payment Proof / Receipt</label>
+                        <input type="file" name="attachment" class="form-control" accept="image/*,.pdf,.doc,.docx">
+                        <div class="form-text">Bank receipt, screenshot, or transaction voucher.</div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                        <a href="{{ url_for('main.payments') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">Record Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateBalanceDisplay() {
+    const sel = document.getElementById('vendorSelect');
+    const display = document.getElementById('currentBalanceDisplay');
+    if (!sel || !display || sel.selectedIndex < 0) return;
+    const selectedOpt = sel.options[sel.selectedIndex];
+    if (!selectedOpt) return;
+    const bal = parseFloat(selectedOpt.getAttribute('data-balance')) || 0;
+    display.innerText = 'Current Outstanding: ₹' + bal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+document.addEventListener('DOMContentLoaded', updateBalanceDisplay);
+</script>
+{% endblock %}

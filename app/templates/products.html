@@ -1,0 +1,92 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h1 class="page-title mb-1">Product Inventory</h1>
+        <p class="text-muted small mb-0">Manage store appliances, brand models, purchase/selling prices, and stock levels.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('main.add_product') }}" class="btn btn-primary">+ Add Product</a>
+    </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="card mb-4">
+    <div class="card-body p-3">
+        <form method="GET" action="{{ url_for('main.products') }}" class="row g-2">
+            <div class="col-md-9">
+                <input type="text" class="form-control" name="q" placeholder="Search by product name or model code..." value="{{ query or '' }}">
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">Search</button>
+                {% if query %}
+                    <a href="{{ url_for('main.products') }}" class="btn btn-secondary">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="card-title-text">Catalog Items ({{ products|length }})</span>
+        <span class="badge badge-secondary">Inventory</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Brand</th>
+                    <th>Model Code</th>
+                    <th class="text-end">Purchase Price</th>
+                    <th class="text-end">Selling Price</th>
+                    <th class="text-center">Stock Level</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td class="fw-bold text-dark">{{ p.name }}</td>
+                    <td>
+                        <span class="badge badge-secondary">{{ p.brand.name if p.brand else 'General' }}</span>
+                    </td>
+                    <td class="font-mono small text-muted">{{ p.model or '—' }}</td>
+                    <td class="text-end font-mono text-muted">₹{{ "{:,.2f}".format(p.purchase_price or 0) }}</td>
+                    <td class="text-end font-mono fw-bold text-dark">₹{{ "{:,.2f}".format(p.selling_price or 0) }}</td>
+                    <td class="text-center">
+                        {% if p.stock <= 0 %}
+                            <span class="badge badge-danger">Out of Stock (0)</span>
+                        {% elif p.stock <= 5 %}
+                            <span class="badge badge-warning">Low Stock ({{ p.stock }})</span>
+                        {% else %}
+                            <span class="badge badge-success">In Stock ({{ p.stock }})</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="d-inline-flex gap-2">
+                            <a href="{{ url_for('main.edit_product', product_id=p.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+                            {% if current_user.role and current_user.role.name == 'Admin' %}
+                            <form method="POST" action="{{ url_for('main.delete_product', product_id=p.id) }}" onsubmit="return confirm('Delete this product?');" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state-box py-5">
+                            <p class="mb-0 text-muted">No products found matching your search.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

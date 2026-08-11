@@ -1,0 +1,99 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Record Vendor Purchase</h1>
+        <p class="text-muted small mb-0">Invoices logged here increase the vendor's outstanding ledger balance.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('main.purchases') }}" class="btn btn-secondary">← Back to Purchases</a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title-text">New Purchase Invoice Entry</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.add_purchase') }}" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label class="form-label">Select Vendor <span class="text-danger">*</span></label>
+                        <select name="vendor_id" class="form-select" required>
+                            <option value="">-- Select Vendor --</option>
+                            {% for v in vendors %}
+                                <option value="{{ v.id }}" {% if preselected_vendor_id == v.id %}selected{% endif %}>{{ v.vendor_name }} ({{ v.city or 'N/A' }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Vendor not listed? <a href="{{ url_for('main.add_vendor') }}" target="_blank">Create new vendor profile</a>.</div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Brand Name</label>
+                            <input type="text" name="brand_name" class="form-control" placeholder="e.g. Samsung, LG, Exide" list="brandOptions">
+                            <datalist id="brandOptions">
+                                {% for b in brands %}
+                                <option value="{{ b.name }}">
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Model Name</label>
+                            <input type="text" name="model_name" class="form-control" placeholder="e.g. Model X-200">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                            <input type="number" id="qtyInput" name="quantity" class="form-control font-mono" min="1" value="1" required oninput="calcTotal()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Unit Price (₹) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" id="unitPriceInput" name="unit_price" class="form-control font-mono" placeholder="0.00" required oninput="calcTotal()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Total Amount (₹)</label>
+                            <input type="text" id="totalOutput" class="form-control font-mono fw-bold bg-light" readonly value="₹0.00">
+                            <div class="form-text">Qty × Unit Price</div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Purchase Date</label>
+                            <input type="date" name="purchase_date" class="form-control font-mono" value="{{ today_date }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Invoice Attachment</label>
+                            <input type="file" name="attachment" class="form-control" accept="image/*,.pdf,.doc,.docx">
+                            <div class="form-text">PDF, Image, or DOC invoice copy.</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                        <a href="{{ url_for('main.purchases') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">Save Purchase Record</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calcTotal() {
+    const qtyInput = document.getElementById('qtyInput');
+    const priceInput = document.getElementById('unitPriceInput');
+    const output = document.getElementById('totalOutput');
+    if (!qtyInput || !priceInput || !output) return;
+    const qty = parseFloat(qtyInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    const total = qty * price;
+    output.value = '₹' + total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+document.addEventListener('DOMContentLoaded', calcTotal);
+</script>
+{% endblock %}

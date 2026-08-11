@@ -1,0 +1,10 @@
+# Copy this content into the PythonAnywhere Web tab WSGI configuration file.
+# Replace YOURUSERNAME with your PythonAnywhere username.
+
+import sys
+
+path = '/home/vemahomeappliances/vema'
+if path not in sys.path:
+    sys.path.insert(0, path)
+
+from wsgi import application
