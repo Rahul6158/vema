@@ -72,18 +72,23 @@ body {
 }
 
 .sidebar-header-orange {
-  padding: 1.15rem 1rem 0.65rem;
+  padding: 1.5rem 1rem 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .sidebar-brand-logo-white {
-  height: 58px;
-  max-width: 195px;
+  height: 80px;
+  max-width: 210px;
   width: auto;
   object-fit: contain;
   filter: brightness(0) invert(1);
+  transition: transform 0.2s ease;
+}
+
+.sidebar-brand-logo-white:hover {
+  transform: scale(1.04);
 }
 
 .sidebar-nav-orange {
@@ -686,3 +691,255 @@ body {
     display: none !important;
   }
 }
+
+/* ==============================================================================
+ * PREMIUM FORM PAGE DESIGN SYSTEM
+ * Clean white cards, orange focus rings, section headers
+ * ============================================================================== */
+
+/* Page-level wrapper to limit form width nicely */
+.form-page-wrapper {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+/* Page header: title + back button */
+.form-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.form-page-header .form-page-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 0.2rem;
+  letter-spacing: -0.02em;
+}
+
+.form-page-header .form-page-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* The main card */
+.form-page-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.055), 0 1px 3px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+}
+
+/* Card internal section heading */
+.form-section-header {
+  padding: 1.1rem 1.5rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafbfc;
+}
+
+.form-section-header .form-section-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Card body padding */
+.form-section-body {
+  padding: 1.5rem;
+}
+
+/* Divider between form sections inside same card */
+.form-section-divider {
+  border: none;
+  border-top: 1px solid #f1f5f9;
+  margin: 0;
+}
+
+/* Premium form labels */
+.form-page-card .form-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.01em;
+}
+
+/* Required star */
+.form-page-card .req {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+/* Premium inputs */
+.form-page-card .form-control,
+.form-page-card .form-select {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  font-size: 0.855rem;
+  color: #0f172a;
+  background-color: #ffffff;
+  padding: 0.5rem 0.8rem;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: none;
+}
+
+.form-page-card .form-control:focus,
+.form-page-card .form-select:focus {
+  border-color: #ff6b1a !important;
+  box-shadow: 0 0 0 3px rgba(255, 107, 26, 0.12) !important;
+  outline: none;
+}
+
+.form-page-card .form-control::placeholder {
+  color: #94a3b8;
+  font-size: 0.83rem;
+  font-weight: 400;
+}
+
+/* Read-only / computed fields */
+.form-page-card .form-control[readonly] {
+  background: #f8fafc;
+  color: #475569;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+/* Textarea */
+.form-page-card textarea.form-control {
+  resize: vertical;
+  min-height: 90px;
+}
+
+/* File input */
+.form-page-card input[type="file"].form-control {
+  padding: 0.42rem 0.8rem;
+}
+
+/* form-text helper text */
+.form-page-card .form-text {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  margin-top: 0.28rem;
+}
+
+/* Info/balance card inside form */
+.form-info-box {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.85rem 1.1rem;
+}
+
+.form-info-box .info-label {
+  font-size: 0.74rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.form-info-box .info-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Bottom action bar */
+.form-action-bar {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  background: #fafbfc;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+/* Primary save button */
+.btn-form-primary {
+  background: linear-gradient(135deg, #ff6b1a 0%, #ea580c 100%);
+  color: #ffffff !important;
+  border: none;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: 0.855rem;
+  padding: 0.55rem 1.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 10px rgba(234, 88, 12, 0.22);
+}
+
+.btn-form-primary:hover {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  box-shadow: 0 6px 18px rgba(234, 88, 12, 0.32);
+  transform: translateY(-1px);
+  color: #ffffff !important;
+}
+
+.btn-form-primary:active {
+  transform: translateY(0);
+}
+
+/* Cancel button */
+.btn-form-cancel {
+  background: #ffffff;
+  color: #64748b !important;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 0.855rem;
+  padding: 0.55rem 1.2rem;
+  transition: all 0.18s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-form-cancel:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #334155 !important;
+}
+
+/* Status badge toggle (active/inactive) */
+.form-status-toggle {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.form-status-toggle .status-opt {
+  flex: 1;
+  text-align: center;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: all 0.15s;
+  color: #475569;
+  background: #fff;
+  user-select: none;
+}
+
+.form-status-toggle input[type="radio"] { display: none; }
+
+.form-status-toggle input[type="radio"]:checked + .status-opt-active {
+  background: #f0fdf4;
+  border-color: #22c55e;
+  color: #166534;
+}
+
+.form-status-toggle input[type="radio"]:checked + .status-opt-inactive {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #991b1b;
+}
+

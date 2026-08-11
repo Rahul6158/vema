@@ -1,41 +1,110 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3 border-0">
-                <h5 class="mb-0 fw-bold">{% if vendor %}Edit Vendor Details{% else %}Register New Vendor{% endif %}</h5>
-            </div>
-            <div class="card-body p-4">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label class="form-label font-weight-bold">Vendor Name / Company <span class="text-danger">*</span></label>
-                        <input type="text" name="vendor_name" class="form-control" placeholder="Enter vendor or company name" value="{{ vendor.vendor_name if vendor else '' }}" required>
-                    </div>
+<div class="form-page-wrapper">
 
-                    <div class="mb-3">
-                        <label class="form-label">Phone No.</label>
-                        <input type="text" name="phone" class="form-control" placeholder="Enter primary contact number" value="{{ vendor.phone if vendor else '' }}">
-                    </div>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Town / City</label>
-                            <input type="text" name="city" class="form-control" placeholder="Enter city" value="{{ vendor.city if vendor else '' }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">State</label>
-                            <input type="text" name="state" class="form-control" placeholder="Enter state" value="{{ vendor.state if vendor else '' }}">
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a href="{{ url_for('main.vendors') }}" class="btn btn-light">Cancel</a>
-                        <button type="submit" class="btn btn-primary">{% if vendor %}Save Changes{% else %}Register Vendor{% endif %}</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+  <!-- Page Header -->
+  <div class="form-page-header">
+    <div>
+      <h1 class="form-page-title">{% if vendor %}Edit Vendor Details{% else %}Register New Vendor{% endif %}</h1>
+      <p class="form-page-subtitle">{% if vendor %}Update the vendor's contact information and account settings.{% else %}Add a new supplier or vendor to your procurement network.{% endif %}</p>
     </div>
+    <a href="{{ url_for('main.vendors') }}" class="btn-form-cancel">
+      ← Back to Vendors
+    </a>
+  </div>
+
+  <form method="POST">
+    <!-- SECTION 1: Basic Information -->
+    <div class="form-page-card mb-3">
+      <div class="form-section-header">
+        <p class="form-section-title">🏢 Company Information</p>
+      </div>
+      <div class="form-section-body">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label">Vendor / Company Name <span class="req">*</span></label>
+            <input type="text" name="vendor_name" class="form-control" placeholder="e.g. Bajaj Electronics Wholesale"
+                   value="{{ vendor.vendor_name if vendor else '' }}" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Vendor Type</label>
+            <select name="vendor_type" class="form-select">
+              {% set vtype = vendor.vendor_type if vendor and vendor.vendor_type else '' %}
+              <option value="" {% if not vtype %}selected{% endif %}>-- Select Type --</option>
+              <option value="Manufacturer" {% if vtype == 'Manufacturer' %}selected{% endif %}>Manufacturer</option>
+              <option value="Distributor" {% if vtype == 'Distributor' %}selected{% endif %}>Distributor</option>
+              <option value="Dealer" {% if vtype == 'Dealer' %}selected{% endif %}>Dealer</option>
+              <option value="Retailer" {% if vtype == 'Retailer' %}selected{% endif %}>Retailer</option>
+              <option value="Service Provider" {% if vtype == 'Service Provider' %}selected{% endif %}>Service Provider</option>
+              <option value="Other" {% if vtype == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Contact Person Name</label>
+            <input type="text" name="contact_person" class="form-control" placeholder="e.g. Suresh Mehta"
+                   value="{{ vendor.contact_person if vendor and vendor.contact_person else '' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Phone No.</label>
+            <input type="text" name="phone" class="form-control font-mono" placeholder="+91 98765 43210"
+                   value="{{ vendor.phone if vendor else '' }}">
+          </div>
+        </div>
+      </div>
+
+      <hr class="form-section-divider">
+
+      <!-- SECTION 2: Address -->
+      <div class="form-section-header">
+        <p class="form-section-title">📍 Location</p>
+      </div>
+      <div class="form-section-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Town / City</label>
+            <input type="text" name="city" class="form-control" placeholder="e.g. Nashik"
+                   value="{{ vendor.city if vendor else '' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">State</label>
+            <input type="text" name="state" class="form-control" placeholder="e.g. Maharashtra"
+                   value="{{ vendor.state if vendor else '' }}">
+          </div>
+        </div>
+      </div>
+
+      <hr class="form-section-divider">
+
+      <!-- SECTION 3: Status -->
+      <div class="form-section-header">
+        <p class="form-section-title">⚙️ Account Status</p>
+      </div>
+      <div class="form-section-body">
+        <label class="form-label d-block mb-2">Vendor Status</label>
+        <div class="form-status-toggle" style="max-width: 320px;">
+          {% set vstatus = vendor.status if vendor and vendor.status else 'Active' %}
+          <label style="flex:1;">
+            <input type="radio" name="status" value="Active" {% if vstatus == 'Active' %}checked{% endif %}>
+            <div class="status-opt status-opt-active">✅ Active</div>
+          </label>
+          <label style="flex:1;">
+            <input type="radio" name="status" value="Inactive" {% if vstatus == 'Inactive' %}checked{% endif %}>
+            <div class="status-opt status-opt-inactive">⛔ Inactive</div>
+          </label>
+        </div>
+        <div class="form-text mt-2">Active vendors appear in purchase order dropdowns.</div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="form-action-bar form-page-card" style="border-radius: 16px;">
+      <a href="{{ url_for('main.vendors') }}" class="btn-form-cancel">Cancel</a>
+      <button type="submit" class="btn-form-primary">
+        {% if vendor %}💾 Save Changes{% else %}➕ Register Vendor{% endif %}
+      </button>
+    </div>
+  </form>
+
 </div>
 {% endblock %}

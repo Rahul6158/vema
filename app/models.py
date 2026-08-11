@@ -234,12 +234,17 @@ class Product:
 
 
 class Vendor:
-    def __init__(self, id=None, vendor_name='', phone='', state='', city='', created_at=None, updated_at=None):
+    def __init__(self, id=None, vendor_name='', phone='', state='', city='',
+                 contact_person='', vendor_type='', status='Active',
+                 created_at=None, updated_at=None):
         self.id = id
         self.vendor_name = vendor_name
         self.phone = phone
         self.state = state
         self.city = city
+        self.contact_person = contact_person or ''
+        self.vendor_type = vendor_type or ''
+        self.status = status or 'Active'
         self.created_at = _parse_datetime(created_at)
         self.updated_at = _parse_datetime(updated_at) if updated_at else self.created_at
         self._storage = None
@@ -301,6 +306,9 @@ class Vendor:
             'phone': self.phone,
             'state': self.state,
             'city': self.city,
+            'contact_person': self.contact_person,
+            'vendor_type': self.vendor_type,
+            'status': self.status,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -313,6 +321,9 @@ class Vendor:
             phone=data.get('phone', ''),
             state=data.get('state', ''),
             city=data.get('city', ''),
+            contact_person=data.get('contact_person', ''),
+            vendor_type=data.get('vendor_type', ''),
+            status=data.get('status', 'Active'),
             created_at=data.get('created_at'),
             updated_at=data.get('updated_at')
         )
@@ -321,13 +332,16 @@ class Vendor:
 
 
 class Payment:
-    def __init__(self, id=None, vendor_id=None, payment_date=None, payment_method='Cash', amount_paid=0, attachment='', created_at=None):
+    def __init__(self, id=None, vendor_id=None, payment_date=None, payment_method='Cash',
+                 amount_paid=0, attachment='', reference_number='', notes='', created_at=None):
         self.id = id
         self.vendor_id = vendor_id
         self.payment_date = _parse_date(payment_date) or date.today()
         self.payment_method = payment_method or 'Cash'
         self.amount_paid = float(amount_paid or 0)
         self.attachment = attachment or ''
+        self.reference_number = reference_number or ''
+        self.notes = notes or ''
         self.created_at = _parse_datetime(created_at)
         self._storage = None
 
@@ -348,6 +362,8 @@ class Payment:
             'payment_method': self.payment_method,
             'amount_paid': self.amount_paid,
             'attachment': self.attachment,
+            'reference_number': self.reference_number,
+            'notes': self.notes,
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }
 
@@ -360,6 +376,8 @@ class Payment:
             payment_method=data.get('payment_method', 'Cash'),
             amount_paid=data.get('amount_paid', 0),
             attachment=data.get('attachment', ''),
+            reference_number=data.get('reference_number', ''),
+            notes=data.get('notes', ''),
             created_at=data.get('created_at')
         )
         pmt._storage = storage

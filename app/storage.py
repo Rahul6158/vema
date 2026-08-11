@@ -75,6 +75,25 @@ class SQLiteStorage:
                     except Exception:
                         pass
 
+            # Migrate vendor table: add new PRD columns if missing
+            vendor_cols = [r['name'] for r in conn.execute('PRAGMA table_info(vendor)').fetchall()]
+            for col_name, col_type in [('contact_person', 'TEXT'), ('vendor_type', 'TEXT'), ('status', "TEXT DEFAULT 'Active'")]:
+                if col_name not in vendor_cols:
+                    try:
+                        conn.execute(f'ALTER TABLE vendor ADD COLUMN {col_name} {col_type}')
+                    except Exception:
+                        pass
+
+            # Migrate payment table: add new PRD columns if missing
+            payment_cols = [r['name'] for r in conn.execute('PRAGMA table_info(payment)').fetchall()]
+            for col_name, col_type in [('reference_number', 'TEXT'), ('notes', 'TEXT')]:
+                if col_name not in payment_cols:
+                    try:
+                        conn.execute(f'ALTER TABLE payment ADD COLUMN {col_name} {col_type}')
+                    except Exception:
+                        pass
+
+
     def ensure_data(self):
         for name, (table, cls) in COLLECTIONS.items():
             rows = self._connect().execute(f'SELECT * FROM "{table}"').fetchall()

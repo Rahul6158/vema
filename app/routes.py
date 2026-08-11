@@ -178,10 +178,16 @@ def add_vendor():
         phone = request.form.get('phone', '').strip()
         state = request.form.get('state', '').strip()
         city = request.form.get('city', '').strip()
+        contact_person = request.form.get('contact_person', '').strip()
+        vendor_type = request.form.get('vendor_type', '').strip()
+        status = request.form.get('status', 'Active').strip()
         if not vendor_name:
             flash('Vendor Name is required.', 'danger')
             return redirect(url_for('main.add_vendor'))
-        vendor = Vendor(vendor_name=vendor_name, phone=phone, state=state, city=city)
+        vendor = Vendor(
+            vendor_name=vendor_name, phone=phone, state=state, city=city,
+            contact_person=contact_person, vendor_type=vendor_type, status=status
+        )
         storage.add_vendor(vendor)
         flash(f'Vendor "{vendor_name}" created successfully.', 'success')
         return redirect(url_for('main.vendor_detail', vendor_id=vendor.id))
@@ -227,6 +233,9 @@ def edit_vendor(vendor_id):
         vendor.phone = request.form.get('phone', '').strip()
         vendor.state = request.form.get('state', '').strip()
         vendor.city = request.form.get('city', '').strip()
+        vendor.contact_person = request.form.get('contact_person', '').strip()
+        vendor.vendor_type = request.form.get('vendor_type', '').strip()
+        vendor.status = request.form.get('status', 'Active').strip()
         vendor.updated_at = datetime.utcnow()
         storage.save_vendors()
         flash('Vendor details updated.', 'success')
@@ -382,6 +391,8 @@ def add_payment():
         vendor_id = request.form.get('vendor_id', type=int)
         payment_date_str = request.form.get('payment_date') or date.today().isoformat()
         payment_method = request.form.get('payment_method', 'Cash')
+        reference_number = request.form.get('reference_number', '').strip()
+        notes = request.form.get('notes', '').strip()
         try:
             amount_paid = float(request.form.get('amount_paid', 0))
         except ValueError:
@@ -399,7 +410,9 @@ def add_payment():
             payment_date=payment_date_str,
             payment_method=payment_method,
             amount_paid=amount_paid,
-            attachment=attachment_name
+            attachment=attachment_name,
+            reference_number=reference_number,
+            notes=notes
         )
         storage.add_payment(pmt)
         vendor = storage.get_vendor(vendor_id)
@@ -408,6 +421,7 @@ def add_payment():
         return redirect(url_for('main.vendor_detail', vendor_id=vendor_id))
 
     return render_template('new_payment.html', vendors=vendors, preselected_vendor_id=preselected_vendor_id, today_date=date.today().isoformat())
+
 
 
 @main_bp.route('/payments/<int:payment_id>')
