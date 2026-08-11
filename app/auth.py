@@ -21,34 +21,8 @@ def login():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        email = request.form.get('email', '').strip()
-        phone = request.form.get('phone', '').strip()
-        password = request.form.get('password', '')
-        
-        if not name or not email or not password:
-            flash('Please fill in all required fields.', 'danger')
-            return redirect(url_for('auth.register'))
-            
-        existing_user = storage.find_user_by_email(email)
-        if existing_user:
-            flash('An account with this email already exists. Please log in.', 'warning')
-            return redirect(url_for('auth.login'))
-            
-        new_user = User(name=name, email=email, phone=phone, active=True)
-        new_user.set_password(password)
-        
-        staff_role = storage.find_role_by_name('Staff') or storage.find_role_by_name('User')
-        if staff_role:
-            new_user.role_id = staff_role.id
-            
-        storage.add_user(new_user)
-        login_user(new_user)
-        flash('Account created successfully! Welcome to VEMA CRM.', 'success')
-        return redirect(url_for('main.dashboard'))
-        
-    return render_template('register.html')
+    flash('Self-registration is currently disabled. Please contact your administrator.', 'warning')
+    return redirect(url_for('auth.login'))
 
 
 @auth_bp.route('/logout')

@@ -43,12 +43,6 @@
             <img src="{{ url_for('static', filename='vema-logo.png') }}" alt="VEMA Logo" style="height: 52px; width: auto; object-fit: contain;" class="img-fluid mb-2">
           </div>
 
-          <!-- Segmented Pill Switcher Tabs -->
-          <div class="auth-nav-pills mb-4">
-            <button type="button" class="auth-pill-btn active" id="tabLoginBtn" onclick="switchAuthTab('login')">Log In</button>
-            <button type="button" class="auth-pill-btn" id="tabRegisterBtn" onclick="switchAuthTab('register')">Sign Up</button>
-          </div>
-
           <!-- Inline Flashed Alert Notification -->
           {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -92,47 +86,6 @@
                 </div>
 
                 <button type="submit" class="btn btn-login-orange w-100 py-3 fs-6 mb-3">Log in</button>
-
-                <div class="text-center mt-3">
-                  <span class="text-muted small">New to VEMA CRM?</span>
-                  <a href="javascript:void(0)" onclick="switchAuthTab('register')" class="fw-bold text-decoration-none ms-1" style="color: #ea580c;">Create an account</a>
-                </div>
-              </form>
-            </div>
-
-            <!-- PANEL 2: SIGN UP FORM -->
-            <div class="auth-form-panel panel-right-out" id="registerPanel">
-              <div class="mb-4">
-                <h1 class="fw-extrabold mb-1" style="color: #ea580c; font-size: 2.1rem; letter-spacing: -0.03em;">Create Account</h1>
-                <p class="text-muted small">Enter your details to create your VEMA CRM profile.</p>
-              </div>
-
-              <form method="POST" action="{{ url_for('auth.register') }}">
-                <div class="mb-4 position-relative">
-                  <input type="text" name="name" id="regName" class="form-control-minimal" placeholder="Full Name" required autocomplete="name">
-                </div>
-
-                <div class="mb-4 position-relative">
-                  <input type="email" name="email" id="regEmail" class="form-control-minimal" placeholder="Email Address" required autocomplete="email">
-                </div>
-
-                <div class="mb-4 position-relative">
-                  <input type="tel" name="phone" id="regPhone" class="form-control-minimal" placeholder="Phone Number" autocomplete="tel">
-                </div>
-
-                <div class="mb-4 position-relative">
-                  <input type="password" name="password" id="regPassword" class="form-control-minimal" placeholder="Create Password" required autocomplete="new-password">
-                  <button type="button" class="btn-toggle-password" onclick="togglePasswordVisibility('regPassword', 'eyeIconReg')" aria-label="Toggle password">
-                    <svg id="eyeIconReg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                  </button>
-                </div>
-
-                <button type="submit" class="btn btn-login-orange w-100 py-3 fs-6 mb-3">Sign Up</button>
-
-                <div class="text-center mt-3">
-                  <span class="text-muted small">Already have an account?</span>
-                  <a href="javascript:void(0)" onclick="switchAuthTab('login')" class="fw-bold text-decoration-none ms-1" style="color: #ea580c;">Log in here</a>
-                </div>
               </form>
             </div>
 
@@ -151,39 +104,6 @@
 </div>
 
 <script>
-function switchAuthTab(mode) {
-    const loginPanel = document.getElementById('loginPanel');
-    const registerPanel = document.getElementById('registerPanel');
-    const loginBtn = document.getElementById('tabLoginBtn');
-    const registerBtn = document.getElementById('tabRegisterBtn');
-    const bannerTitle = document.getElementById('bannerTitle');
-    const bannerSubtitle = document.getElementById('bannerSubtitle');
-
-    if (mode === 'register') {
-        loginPanel.className = 'auth-form-panel panel-left-out';
-        registerPanel.className = 'auth-form-panel panel-active';
-        
-        loginBtn.classList.remove('active');
-        registerBtn.classList.add('active');
-
-        if (bannerTitle) bannerTitle.innerText = 'Join VEMA';
-        if (bannerSubtitle) bannerSubtitle.innerText = 'Create your account to start managing vendors, logging purchases, tracking payments, and monitoring balance ledgers.';
-
-        if (history.pushState) history.pushState(null, '', '/register');
-    } else {
-        registerPanel.className = 'auth-form-panel panel-right-out';
-        loginPanel.className = 'auth-form-panel panel-active';
-
-        registerBtn.classList.remove('active');
-        loginBtn.classList.add('active');
-
-        if (bannerTitle) bannerTitle.innerText = 'Welcome to';
-        if (bannerSubtitle) bannerSubtitle.innerText = 'With the trust of hundreds of vendors, VEMA delivers seamless vendor management, purchase tracking & payment reconciliation.';
-
-        if (history.pushState) history.pushState(null, '', '/login');
-    }
-}
-
 function togglePasswordVisibility(inputId, iconId) {
     const passwordInput = document.getElementById(inputId);
     const eyeIcon = document.getElementById(iconId);
@@ -196,12 +116,5 @@ function togglePasswordVisibility(inputId, iconId) {
         eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
     }
 }
-
-// Auto-activate tab based on URL path
-document.addEventListener("DOMContentLoaded", function() {
-    if (window.location.pathname === '/register') {
-        switchAuthTab('register');
-    }
-});
 </script>
 {% endblock unauth_content %}

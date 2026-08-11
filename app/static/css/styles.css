@@ -630,8 +630,7 @@ body {
 
 .auth-form-container {
   position: relative;
-  min-height: 440px;
-  overflow: hidden;
+  min-height: auto;
 }
 
 .auth-form-panel {
@@ -686,9 +685,16 @@ body {
 }
 
 /* RESPONSIVE BREAKPOINTS */
-@media (max-width: 991px) {
+@media (max-width: 991.98px) {
   .app-sidebar-orange {
-    display: none !important;
+    position: fixed !important;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    height: 100dvh;
+    max-height: 100dvh;
+    z-index: 1045;
+    display: flex;
   }
 }
 
