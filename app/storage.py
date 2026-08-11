@@ -68,7 +68,7 @@ class SQLiteStorage:
             new_cols = [
                 ('vendor_id', 'INTEGER'), ('brand_name', 'TEXT'), ('model_name', 'TEXT'),
                 ('quantity', 'INTEGER'), ('purchase_date', 'TEXT'), ('unit_price', 'REAL'),
-                ('total_amount', 'REAL'), ('attachment', 'TEXT')
+                ('total_amount', 'REAL'), ('attachment', 'TEXT'), ('status', "TEXT DEFAULT 'Approved'")
             ]
             for col_name, col_type in new_cols:
                 if col_name not in cols:

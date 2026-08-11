@@ -8,7 +8,7 @@
 <!-- 5 Top Metric KPI Row (Highlighted Color Schemas) -->
 <div class="row g-3 mb-4">
   <!-- Card 1: TOTAL PURCHASE ORDERS (Orange Theme) -->
-  <div class="col">
+  <div class="col-6 col-md-4 col-xl">
     <div class="dashboard-kpi-card kpi-card-orange">
       <div class="d-flex align-items-center gap-3">
         <div class="kpi-icon-square">
@@ -16,15 +16,15 @@
         </div>
         <div>
           <div class="kpi-title-header">TOTAL PURCHASE ORDERS</div>
-          <div class="kpi-value-num">{{ total_po_count if total_po_count else 243 }}</div>
-          <div class="kpi-trend-green mt-1">↑ 18 this month</div>
+          <div class="kpi-value-num">{{ total_po_count }}</div>
+          <div class="kpi-trend-green mt-1">↑ {{ purchases_this_month }} this month</div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Card 2: DRAFT ORDERS (Amber Theme) -->
-  <div class="col">
+  <div class="col-6 col-md-4 col-xl">
     <div class="dashboard-kpi-card kpi-card-amber">
       <div class="d-flex align-items-center gap-3">
         <div class="kpi-icon-square">
@@ -32,15 +32,15 @@
         </div>
         <div>
           <div class="kpi-title-header">DRAFT ORDERS</div>
-          <div class="kpi-value-num">{{ draft_po_count if draft_po_count else 18 }}</div>
-          <div class="kpi-trend-green mt-1">↑ 4 this month</div>
+          <div class="kpi-value-num">{{ draft_po_count }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">Awaiting finalization</div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Card 3: APPROVED ORDERS (Blue Theme) -->
-  <div class="col">
+  <div class="col-6 col-md-4 col-xl">
     <div class="dashboard-kpi-card kpi-card-blue">
       <div class="d-flex align-items-center gap-3">
         <div class="kpi-icon-square">
@@ -48,15 +48,15 @@
         </div>
         <div>
           <div class="kpi-title-header">APPROVED ORDERS</div>
-          <div class="kpi-value-num">{{ approved_po_count if approved_po_count else 183 }}</div>
-          <div class="kpi-trend-green mt-1">↑ 14 this month</div>
+          <div class="kpi-value-num">{{ approved_po_count }}</div>
+          <div class="kpi-trend-green mt-1">+ {{ pending_po_count }} pending approval</div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Card 4: DELIVERED ORDERS (Green Theme) -->
-  <div class="col">
+  <div class="col-6 col-md-4 col-xl">
     <div class="dashboard-kpi-card kpi-card-green">
       <div class="d-flex align-items-center gap-3">
         <div class="kpi-icon-square">
@@ -64,15 +64,15 @@
         </div>
         <div>
           <div class="kpi-title-header">DELIVERED ORDERS</div>
-          <div class="kpi-value-num">{{ delivered_po_count if delivered_po_count else 32 }}</div>
-          <div class="kpi-trend-green mt-1">↑ 6 this month</div>
+          <div class="kpi-value-num">{{ delivered_po_count }}</div>
+          <div class="kpi-trend-green mt-1">Delivered & received</div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Card 5: CANCELLED ORDERS (Red Theme) -->
-  <div class="col">
+  <div class="col-6 col-md-4 col-xl">
     <div class="dashboard-kpi-card kpi-card-red">
       <div class="d-flex align-items-center gap-3">
         <div class="kpi-icon-square">
@@ -80,8 +80,8 @@
         </div>
         <div>
           <div class="kpi-title-header">CANCELLED ORDERS</div>
-          <div class="kpi-value-num text-danger">{{ cancelled_po_count if cancelled_po_count else 10 }}</div>
-          <div class="kpi-trend-red mt-1">↓ 2 this month</div>
+          <div class="kpi-value-num text-danger">{{ cancelled_po_count }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">No further action</div>
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@
       <!-- 4. Date Range Box -->
       <div class="col-xl-2 col-md-2">
         <div class="d-flex align-items-center justify-content-between bg-white border rounded px-2.5 font-mono w-100" style="height: 38px; font-size: 0.76rem; border-color: #cbd5e1 !important; color: #475569;">
-          <span>May 1 - May 14</span>
+          <span>Past 12 months</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </div>
       </div>
@@ -166,7 +166,7 @@
             <!-- PO Number (Orange Mono Code) -->
             <td>
               <a href="{{ url_for('main.view_purchase', purchase_id=p.id) }}" class="font-mono text-decoration-none fw-bold" style="color: #ff6b1a; font-size: 0.8125rem;">
-                {{ p.po_number or ('PUR-2026-00' ~ p.id) }}
+                {{ p.purchase_id }}
               </a>
             </td>
 
@@ -177,18 +177,18 @@
                   {{ p.vendor.vendor_name }}
                 </a>
               {% else %}
-                <span class="vendor-name-text text-dark">Samsung India Pvt. Ltd.</span>
+                <span class="vendor-name-text text-dark">—</span>
               {% endif %}
             </td>
 
             <!-- PO Date -->
             <td class="text-muted font-mono" style="font-size: 0.78rem;">
-              {{ p.purchase_date.strftime('%b %d, %Y') if p.purchase_date else 'Aug 12, 2026' }}
+              {{ p.purchase_date.strftime('%b %d, %Y') if p.purchase_date else '—' }}
             </td>
 
             <!-- Expected Date -->
             <td class="text-muted font-mono" style="font-size: 0.78rem;">
-              {% if loop.index == 1 %}May 20, 2025{% elif loop.index == 2 %}May 19, 2025{% elif loop.index == 3 %}May 18, 2025{% elif loop.index == 4 %}May 17, 2025{% else %}May 15, 2025{% endif %}
+              {{ p.expected_date.strftime('%b %d, %Y') if p.expected_date else '—' }}
             </td>
 
             <!-- Amount (Bold Currency) -->
@@ -198,13 +198,15 @@
 
             <!-- Status Pill Badge -->
             <td>
-              {% set pstatus = p.status if p.status else 'Approved' %}
-              {% if pstatus == 'Approved' or loop.index == 1 or loop.index == 4 %}
+              {% set pstatus = p.status or 'Approved' %}
+              {% if pstatus == 'Approved' %}
                 <span class="badge-status-approved">Approved</span>
-              {% elif pstatus == 'Pending' or loop.index == 2 %}
+              {% elif pstatus == 'Pending' %}
                 <span class="badge-status-pending">Pending</span>
-              {% elif pstatus == 'Delivered' or loop.index == 3 %}
+              {% elif pstatus == 'Delivered' %}
                 <span class="badge-status-delivered">Delivered</span>
+              {% elif pstatus == 'Draft' %}
+                <span class="badge" style="background-color: #f1f5f9; color: #475569; font-weight: 700; padding: 0.28em 0.8em; border-radius: 999px; font-size: 0.72rem;">Draft</span>
               {% else %}
                 <span class="badge" style="background-color: #fee2e2; color: #b91c1c; font-weight: 700; padding: 0.28em 0.8em; border-radius: 999px; font-size: 0.72rem;">Cancelled</span>
               {% endif %}
@@ -212,7 +214,7 @@
 
             <!-- Created By -->
             <td class="text-muted" style="font-size: 0.78rem;">
-              {% if loop.index == 3 %}Jane Smith{% else %}John Doe{% endif %}
+              {{ p.user.name if p.user else '—' }}
             </td>
 
             <!-- Action Icon Buttons -->
@@ -251,17 +253,25 @@
   <!-- Footer Pagination (Fixed at Bottom) -->
   <div class="card-table-footer-fixed" style="font-size: 0.78rem;">
     <div class="text-muted">
-      Showing 1 to {{ purchases|length }} of {{ total_po_count if total_po_count else 243 }} entries
+      {% if total_items %}
+        Showing {{ start_idx }} to {{ end_idx }} of {{ total_items }} entries
+      {% else %}
+        No entries found
+      {% endif %}
     </div>
+    {% if total_pages > 1 %}
     <div class="d-flex align-items-center gap-1">
-      <button class="btn btn-sm btn-light border p-1 px-2" disabled>&lt;</button>
-      <button class="btn btn-sm btn-orange-primary p-1 px-2">1</button>
-      <button class="btn btn-sm btn-light border p-1 px-2">2</button>
-      <button class="btn btn-sm btn-light border p-1 px-2">3</button>
-      <span class="text-muted px-1">...</span>
-      <button class="btn btn-sm btn-light border p-1 px-2">25</button>
-      <button class="btn btn-sm btn-light border p-1 px-2">&gt;</button>
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page <= 1 %}disabled{% endif %}" href="{{ url_for('main.purchases', q=query, status=status_filter, vendor_id=vendor_filter, page=page-1) if page > 1 else '#' }}">&lt;</a>
+      {% for pno in pages %}
+        {% if pno is none %}
+          <span class="text-muted px-1">...</span>
+        {% else %}
+          <a class="btn btn-sm {% if pno == page %}btn-orange-primary{% else %}btn-light border{% endif %} p-1 px-2" href="{{ url_for('main.purchases', q=query, status=status_filter, vendor_id=vendor_filter, page=pno) }}">{{ pno }}</a>
+        {% endif %}
+      {% endfor %}
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page >= total_pages %}disabled{% endif %}" href="{{ url_for('main.purchases', q=query, status=status_filter, vendor_id=vendor_filter, page=page+1) if page < total_pages else '#' }}">&gt;</a>
     </div>
+    {% endif %}
   </div>
 </div>
 

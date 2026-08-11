@@ -8,7 +8,7 @@
 <!-- 5 Top Metric KPI Row (Highlighted Color Schemas) -->
 <div class="row g-3 mb-4">
   <!-- Card 1: TOTAL VENDORS (Orange Theme) -->
-  <div class="col">
+  <div class="col-6 col-md-4 col-xl">
     <div class="dashboard-kpi-card kpi-card-orange">
       <div class="d-flex align-items-center gap-3">
         <div class="kpi-icon-square">
@@ -16,15 +16,15 @@
         </div>
         <div>
           <div class="kpi-title-header">TOTAL VENDORS</div>
-          <div class="kpi-value-num">{{ total_vendors_count if total_vendors_count else 128 }}</div>
-          <div class="kpi-trend-green mt-1">↑ 12 this month</div>
+          <div class="kpi-value-num">{{ total_vendors_count }}</div>
+          <div class="kpi-trend-green mt-1">↑ {{ vendors_added_this_month }} added this month</div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Card 2: ACTIVE VENDORS (Green Theme) -->
-  <div class="col">
+  <div class="col-6 col-md-4 col-xl">
     <div class="dashboard-kpi-card kpi-card-green">
       <div class="d-flex align-items-center gap-3">
         <div class="kpi-icon-square">
@@ -32,15 +32,15 @@
         </div>
         <div>
           <div class="kpi-title-header">ACTIVE VENDORS</div>
-          <div class="kpi-value-num">{{ active_vendors_count if active_vendors_count else 112 }}</div>
-          <div class="kpi-trend-green mt-1">↑ 8 this month</div>
+          <div class="kpi-value-num">{{ active_vendors_count }}</div>
+          <div class="kpi-trend-green mt-1">↑ {{ active_added_this_month }} active this month</div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Card 3: INACTIVE VENDORS (Red Theme) -->
-  <div class="col">
+  <div class="col-6 col-md-4 col-xl">
     <div class="dashboard-kpi-card kpi-card-red">
       <div class="d-flex align-items-center gap-3">
         <div class="kpi-icon-square">
@@ -48,15 +48,15 @@
         </div>
         <div>
           <div class="kpi-title-header">INACTIVE VENDORS</div>
-          <div class="kpi-value-num">{{ inactive_vendors_count if inactive_vendors_count else 16 }}</div>
-          <div class="kpi-trend-red mt-1">↓ 4 this month</div>
+          <div class="kpi-value-num">{{ inactive_vendors_count }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">Out of {{ total_vendors_count }} total</div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Card 4: TOTAL PURCHASES (Amber Theme) -->
-  <div class="col">
+  <div class="col-6 col-md-4 col-xl">
     <div class="dashboard-kpi-card kpi-card-amber">
       <div class="d-flex align-items-center gap-3">
         <div class="kpi-icon-square fw-bold fs-5">
@@ -64,15 +64,17 @@
         </div>
         <div>
           <div class="kpi-title-header">TOTAL PURCHASES</div>
-          <div class="kpi-value-num">₹{{ "{:,.0f}".format(total_purchases_val) if total_purchases_val else '48,75,230' }}</div>
-          <div class="kpi-trend-green mt-1">↑ 8.5% this month</div>
+          <div class="kpi-value-num">₹{{ "{:,.0f}".format(total_purchases_val) }}</div>
+          <div class="{% if purchases_pct_change >= 0 %}kpi-trend-green{% else %}kpi-trend-red{% endif %} mt-1">
+            {% if purchases_pct_change >= 0 %}↑{% else %}↓{% endif %} {{ "%.1f"|format(purchases_pct_change|abs) }}% vs last month
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Card 5: OUTSTANDING PAYABLE (Blue Theme) -->
-  <div class="col">
+  <div class="col-6 col-md-4 col-xl">
     <div class="dashboard-kpi-card kpi-card-blue">
       <div class="d-flex align-items-center gap-3">
         <div class="kpi-icon-square">
@@ -80,8 +82,10 @@
         </div>
         <div>
           <div class="kpi-title-header">OUTSTANDING PAYABLE</div>
-          <div class="kpi-value-num text-danger">₹{{ "{:,.0f}".format(total_outstanding_val) if total_outstanding_val else '16,30,110' }}</div>
-          <div class="kpi-trend-red mt-1">↓ 3.4% this month</div>
+          <div class="kpi-value-num text-danger">₹{{ "{:,.0f}".format(total_outstanding_val) }}</div>
+          <div class="{% if outstanding_pct_change <= 0 %}kpi-trend-green{% else %}kpi-trend-red{% endif %} mt-1">
+            {% if outstanding_pct_change <= 0 %}↓{% else %}↑{% endif %} {{ "%.1f"|format(outstanding_pct_change|abs) }}% vs last month
+          </div>
         </div>
       </div>
     </div>
@@ -166,29 +170,29 @@
             </td>
 
             <!-- Contact Person -->
-            <td class="text-dark">{{ v.contact_person or ('Rakesh Sharma' if loop.index == 1 else 'Amit Verma' if loop.index == 2 else 'Neha Kapoor' if loop.index == 3 else 'Sanjay Mehta' if loop.index == 4 else 'Priya Nair' if loop.index == 5 else 'Vikram Joshi' if loop.index == 7 else 'Deepak Singh' if loop.index == 8 else 'Contact Manager') }}</td>
+            <td class="text-dark">{{ v.contact_person or '—' }}</td>
 
             <!-- Mobile & Email -->
             <td>
-              <div class="fw-semibold font-mono text-dark" style="font-size: 0.8125rem;">{{ v.phone or '9876543210' }}</div>
+              <div class="fw-semibold font-mono text-dark" style="font-size: 0.8125rem;">{{ v.phone or '—' }}</div>
               <div class="text-muted small" style="font-size: 0.75rem;">contact@{{ v.vendor_name|lower|replace(' ', '')|replace('.', '') }}.com</div>
             </td>
 
             <!-- Vendor Type Badge -->
             <td>
-              {% set vtype = v.vendor_type or ('Manufacturer' if loop.index == 4 else 'Others' if loop.index == 6 else 'Supplier') %}
+              {% set vtype = v.vendor_type or 'Supplier' %}
               {% if vtype == 'Manufacturer' %}
                 <span class="badge" style="background-color: #dbeafe; color: #1d4ed8; font-weight: 700; padding: 0.25em 0.75em; border-radius: 999px; font-size: 0.72rem;">Manufacturer</span>
-              {% elif vtype == 'Others' %}
-                <span class="badge" style="background-color: #f1f5f9; color: #475569; font-weight: 700; padding: 0.25em 0.75em; border-radius: 999px; font-size: 0.72rem;">Others</span>
+              {% elif vtype in ('Others', 'Dealer') %}
+                <span class="badge" style="background-color: #f1f5f9; color: #475569; font-weight: 700; padding: 0.25em 0.75em; border-radius: 999px; font-size: 0.72rem;">{{ vtype }}</span>
               {% else %}
-                <span class="badge" style="background-color: #ffedd5; color: #c2410c; font-weight: 700; padding: 0.25em 0.75em; border-radius: 999px; font-size: 0.72rem;">Supplier</span>
+                <span class="badge" style="background-color: #ffedd5; color: #c2410c; font-weight: 700; padding: 0.25em 0.75em; border-radius: 999px; font-size: 0.72rem;">{{ vtype }}</span>
               {% endif %}
             </td>
 
             <!-- Status Badge -->
             <td>
-              {% set vstatus = v.status or ('Inactive' if loop.index >= 7 else 'Active') %}
+              {% set vstatus = v.status or 'Active' %}
               {% if vstatus == 'Active' %}
                 <span class="badge-status-approved">Active</span>
               {% else %}
@@ -235,17 +239,25 @@
   <!-- Footer Pagination Summary (Fixed at Bottom) -->
   <div class="card-table-footer-fixed" style="font-size: 0.78rem;">
     <div class="text-muted">
-      Showing 1 to {{ vendors|length }} of {{ total_vendors_count if total_vendors_count else vendors|length }} entries
+      {% if total_items %}
+        Showing {{ start_idx }} to {{ end_idx }} of {{ total_items }} entries
+      {% else %}
+        No entries found
+      {% endif %}
     </div>
+    {% if total_pages > 1 %}
     <div class="d-flex align-items-center gap-1">
-      <button class="btn btn-sm btn-light border p-1 px-2" disabled>&lt;</button>
-      <button class="btn btn-sm btn-orange-primary p-1 px-2">1</button>
-      <button class="btn btn-sm btn-light border p-1 px-2">2</button>
-      <button class="btn btn-sm btn-light border p-1 px-2">3</button>
-      <span class="text-muted px-1">...</span>
-      <button class="btn btn-sm btn-light border p-1 px-2">16</button>
-      <button class="btn btn-sm btn-light border p-1 px-2">&gt;</button>
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page <= 1 %}disabled{% endif %}" href="{{ url_for('main.vendors', q=query, status=status_filter, type=type_filter, page=page-1) if page > 1 else '#' }}">&lt;</a>
+      {% for pno in pages %}
+        {% if pno is none %}
+          <span class="text-muted px-1">...</span>
+        {% else %}
+          <a class="btn btn-sm {% if pno == page %}btn-orange-primary{% else %}btn-light border{% endif %} p-1 px-2" href="{{ url_for('main.vendors', q=query, status=status_filter, type=type_filter, page=pno) }}">{{ pno }}</a>
+        {% endif %}
+      {% endfor %}
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page >= total_pages %}disabled{% endif %}" href="{{ url_for('main.vendors', q=query, status=status_filter, type=type_filter, page=page+1) if page < total_pages else '#' }}">&gt;</a>
     </div>
+    {% endif %}
   </div>
 </div>
 

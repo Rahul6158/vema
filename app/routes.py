@@ -18,6 +18,34 @@ def get_object_or_404(obj):
     return obj
 
 
+PER_PAGE = 10
+
+
+def paginate(items, page, per_page=PER_PAGE):
+    total = len(items)
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    page = max(1, min(page or 1, total_pages))
+    start = (page - 1) * per_page
+    page_items = items[start:start + per_page]
+    return page_items, page, total_pages, total
+
+
+def pagination_pages(page, total_pages):
+    """Windowed list of page numbers; None marks an ellipsis gap."""
+    if total_pages <= 7:
+        return list(range(1, total_pages + 1))
+    candidates = sorted({1, 2, total_pages - 1, total_pages, page - 1, page, page + 1})
+    candidates = [p for p in candidates if 1 <= p <= total_pages]
+    result = []
+    prev = 0
+    for p in candidates:
+        if p - prev > 1:
+            result.append(None)
+        result.append(p)
+        prev = p
+    return result
+
+
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'webp', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'txt'}
 
 def save_attachment(file_obj):
@@ -202,6 +230,7 @@ def vendors():
     query = request.args.get('q', '')
     status_filter = request.args.get('status', '')
     type_filter = request.args.get('type', '')
+    page = request.args.get('page', 1, type=int)
 
     vendor_list = storage.search_vendors(query) if query else storage.vendors
     if status_filter and status_filter != 'All':
@@ -211,24 +240,66 @@ def vendors():
 
     vendor_list = sorted(vendor_list, key=lambda v: v.vendor_name)
 
+    # Real KPI values
+    today = date.today()
+    month_start = today.replace(day=1)
+    prev_month_start = (month_start - timedelta(days=1)).replace(day=1)
+    prev_month_end = month_start - timedelta(days=1)
+
     total_vendors_count = len(storage.vendors)
     active_vendors_count = sum(1 for v in storage.vendors if getattr(v, 'status', 'Active') == 'Active')
-    inactive_vendors_count = sum(1 for v in storage.vendors if getattr(v, 'status', 'Active') == 'Inactive')
+    inactive_vendors_count = total_vendors_count - active_vendors_count
+    vendors_added_this_month = sum(1 for v in storage.vendors
+                                   if v.created_at and v.created_at.date() >= month_start)
+    active_added_this_month = sum(1 for v in storage.vendors
+                                  if getattr(v, 'status', 'Active') == 'Active'
+                                  and v.created_at and v.created_at.date() >= month_start)
+
     total_purchases_val = sum(p.total_amount for p in storage.purchases)
     total_payments_val = sum(p.amount_paid for p in storage.payments)
     total_outstanding_val = total_purchases_val - total_payments_val
 
+    month_purchases = sum(p.total_amount for p in storage.purchases
+                          if p.purchase_date and month_start <= p.purchase_date <= today)
+    prev_month_purchases = sum(p.total_amount for p in storage.purchases
+                               if p.purchase_date and prev_month_start <= p.purchase_date <= prev_month_end)
+    purchases_pct_change = ((month_purchases - prev_month_purchases) / prev_month_purchases * 100
+                            if prev_month_purchases else 0.0)
+
+    outstanding_now = total_outstanding_val
+    outstanding_prev = (sum(p.total_amount for p in storage.purchases
+                            if p.purchase_date and p.purchase_date <= prev_month_end)
+                        - sum(pmt.amount_paid for pmt in storage.payments
+                              if pmt.payment_date and pmt.payment_date <= prev_month_end))
+    outstanding_pct_change = ((outstanding_now - outstanding_prev) / outstanding_prev * 100
+                              if outstanding_prev else 0.0)
+
+    vendors_page, page, total_pages, total_items = paginate(vendor_list, page)
+    pages = pagination_pages(page, total_pages)
+    start_idx = (page - 1) * PER_PAGE + 1
+    end_idx = min(start_idx + len(vendors_page) - 1, total_items)
+
     return render_template(
         'vendors.html',
-        vendors=vendor_list,
+        vendors=vendors_page,
         query=query,
         status_filter=status_filter,
         type_filter=type_filter,
+        page=page,
+        total_pages=total_pages,
+        total_items=total_items,
+        pages=pages,
+        start_idx=start_idx,
+        end_idx=end_idx,
         total_vendors_count=total_vendors_count,
         active_vendors_count=active_vendors_count,
         inactive_vendors_count=inactive_vendors_count,
+        vendors_added_this_month=vendors_added_this_month,
+        active_added_this_month=active_added_this_month,
         total_purchases_val=total_purchases_val,
-        total_outstanding_val=total_outstanding_val
+        total_outstanding_val=total_outstanding_val,
+        purchases_pct_change=purchases_pct_change,
+        outstanding_pct_change=outstanding_pct_change,
     )
 
 
@@ -336,6 +407,7 @@ def purchases():
     query = request.args.get('q', '')
     status_filter = request.args.get('status', '')
     vendor_filter = request.args.get('vendor_id', type=int)
+    page = request.args.get('page', 1, type=int)
 
     purchase_list = storage.search_purchases(query) if query else storage.purchases
     if status_filter and status_filter != 'All':
@@ -349,24 +421,47 @@ def purchases():
     # Show recently added vendors on top in vendor filter list
     recently_added_vendors = sorted(storage.vendors, key=lambda v: (v.created_at if getattr(v, 'created_at', None) else datetime.min, v.id or 0), reverse=True)
 
+    # Real status KPI counts
     total_po_count = len(storage.purchases)
-    draft_po_count = sum(1 for p in storage.purchases if getattr(p, 'status', None) == 'Draft') or 18
-    approved_po_count = sum(1 for p in storage.purchases if getattr(p, 'status', None) == 'Approved') or 183
-    delivered_po_count = sum(1 for p in storage.purchases if getattr(p, 'status', None) == 'Delivered') or 32
-    cancelled_po_count = sum(1 for p in storage.purchases if getattr(p, 'status', None) == 'Cancelled') or 10
+    draft_po_count = sum(1 for p in storage.purchases if getattr(p, 'status', 'Approved') == 'Draft')
+    pending_po_count = sum(1 for p in storage.purchases if getattr(p, 'status', 'Approved') == 'Pending')
+    approved_po_count = sum(1 for p in storage.purchases if getattr(p, 'status', 'Approved') == 'Approved')
+    delivered_po_count = sum(1 for p in storage.purchases if getattr(p, 'status', 'Approved') == 'Delivered')
+    cancelled_po_count = sum(1 for p in storage.purchases if getattr(p, 'status', 'Approved') == 'Cancelled')
+
+    today = date.today()
+    month_start = today.replace(day=1)
+    purchases_this_month = sum(1 for p in storage.purchases
+                               if p.purchase_date and month_start <= p.purchase_date <= today)
+
+    for p in purchase_list:
+        p.expected_date = (p.purchase_date + timedelta(days=7)) if p.purchase_date else None
+
+    purchases_page, page, total_pages, total_items = paginate(purchase_list, page)
+    pages = pagination_pages(page, total_pages)
+    start_idx = (page - 1) * PER_PAGE + 1
+    end_idx = min(start_idx + len(purchases_page) - 1, total_items)
 
     return render_template(
         'purchases.html',
-        purchases=purchase_list,
+        purchases=purchases_page,
         vendors=recently_added_vendors,
         query=query,
         status_filter=status_filter,
         vendor_filter=vendor_filter,
-        total_po_count=total_po_count if total_po_count else 243,
+        page=page,
+        total_pages=total_pages,
+        total_items=total_items,
+        pages=pages,
+        start_idx=start_idx,
+        end_idx=end_idx,
+        total_po_count=total_po_count,
         draft_po_count=draft_po_count,
+        pending_po_count=pending_po_count,
         approved_po_count=approved_po_count,
         delivered_po_count=delivered_po_count,
-        cancelled_po_count=cancelled_po_count
+        cancelled_po_count=cancelled_po_count,
+        purchases_this_month=purchases_this_month,
     )
 
 

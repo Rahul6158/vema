@@ -449,7 +449,7 @@ class Payment:
 
 
 class Purchase:
-    def __init__(self, id=None, purchase_id='', vendor_id=None, brand_name='', model_name='', quantity=1, purchase_date=None, unit_price=0, total_amount=0, attachment='', created_at=None, customer_id=None, user_id=None, purchase_type='Retail', subtotal=0, total=0):
+    def __init__(self, id=None, purchase_id='', vendor_id=None, brand_name='', model_name='', quantity=1, purchase_date=None, unit_price=0, total_amount=0, attachment='', created_at=None, customer_id=None, user_id=None, purchase_type='Retail', subtotal=0, total=0, status='Approved'):
         self.id = id
         self.purchase_id = purchase_id
         self.vendor_id = vendor_id
@@ -472,6 +472,7 @@ class Purchase:
         self.purchase_type = purchase_type
         self.subtotal = float(subtotal or tot)
         self.total = tot
+        self.status = status or 'Approved'
         self._storage = None
 
     def set_storage(self, storage):
@@ -531,6 +532,7 @@ class Purchase:
             'purchase_type': self.purchase_type,
             'subtotal': self.subtotal,
             'total': self.total,
+            'status': self.status,
         }
 
     @classmethod
@@ -551,7 +553,8 @@ class Purchase:
             user_id=data.get('user_id'),
             purchase_type=data.get('purchase_type', 'Retail'),
             subtotal=data.get('subtotal', 0),
-            total=data.get('total', 0)
+            total=data.get('total', 0),
+            status=data.get('status', 'Approved')
         )
         purchase._storage = storage
         return purchase
