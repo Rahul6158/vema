@@ -55,7 +55,7 @@
                     <td class="fw-bold text-success">₹{{ pmt.amount_paid | round(2) }}</td>
                     <td>
                         {% if pmt.attachment %}
-                        <a href="{{ url_for('main.uploaded_file', filename=pmt.attachment) }}" target="_blank" class="btn btn-xs btn-outline-secondary">📎 View Receipt</a>
+                        <a href="{{ url_for('main.uploaded_file', filename=pmt.attachment) }}" target="_blank" class="btn btn-xs btn-outline-secondary">View Receipt</a>
                         {% else %}
                         <span class="text-muted small">-</span>
                         {% endif %}

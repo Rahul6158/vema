@@ -113,6 +113,88 @@
       <!-- Main Layout Workspace -->
       <div class="flex-grow-1 d-flex flex-column" style="min-width: 0;">
         
+        {% set page_titles = {
+          'main.dashboard': 'Dashboard',
+          'main.vendors': 'Vendors',
+          'main.add_vendor': 'Register New Vendor',
+          'main.edit_vendor': 'Edit Vendor',
+          'main.vendor_detail': 'Vendor Profile',
+          'main.vendor_ledger': 'Vendor Ledger',
+          'main.purchases': 'Purchase Orders',
+          'main.add_purchase': 'New Purchase Order',
+          'main.view_purchase': 'Purchase Order Detail',
+          'main.edit_purchase': 'Edit Purchase Order',
+          'main.payments': 'Payments',
+          'main.add_payment': 'Record New Payment',
+          'main.view_payment': 'Payment Detail',
+          'main.edit_payment': 'Edit Payment',
+          'main.grn_list': 'Goods Received Notes',
+          'main.add_grn': 'Record Goods Receipt',
+          'main.invoices': 'Invoices',
+          'main.view_invoice': 'Invoice',
+          'main.customers': 'Customers',
+          'main.add_customer': 'Add New Customer',
+          'main.edit_customer': 'Edit Customer',
+          'main.products': 'Products',
+          'main.add_product': 'Add Product',
+          'main.edit_product': 'Edit Product',
+          'main.offers': 'Offers & Promotions',
+          'main.add_offer': 'Create New Offer',
+          'main.edit_offer': 'Edit Offer',
+          'main.reports': 'Reports',
+          'main.reports_aging': 'Overdue & Aging Report',
+          'main.analytics': 'Analytics',
+          'main.users': 'User Management',
+          'main.add_user': 'Add New User',
+          'main.edit_user': 'Edit User',
+          'main.profile': 'My Profile',
+          'auth.profile': 'My Profile',
+          'main.change_password': 'Change Password',
+          'auth.change_password': 'Change Password',
+          'main.settings': 'System Settings'
+        } %}
+
+        {% set page_subtitles = {
+          'main.dashboard': 'Welcome back, ' ~ (current_user.name.split()[0] if current_user.name else 'Administrator') ~ "! Here's what's happening today.",
+          'main.vendors': 'Manage your suppliers and track their account status.',
+          'main.add_vendor': 'Add a new supplier to your records.',
+          'main.edit_vendor': 'Update the supplier information.',
+          'main.vendor_detail': 'Overview of this supplier purchases, payments and balances.',
+          'main.vendor_ledger': 'Complete purchase and payment history for this vendor.',
+          'main.purchases': 'Track all purchase orders and their delivery status.',
+          'main.add_purchase': 'Record a new purchase order.',
+          'main.view_purchase': 'Full details of this purchase order.',
+          'main.edit_purchase': 'Update this purchase order.',
+          'main.payments': 'Record and track payments made to vendors.',
+          'main.add_payment': 'Log a new payment against a vendor.',
+          'main.view_payment': 'Details of this payment record.',
+          'main.edit_payment': 'Update this payment record.',
+          'main.grn_list': 'Match received goods against purchase orders.',
+          'main.add_grn': 'Record goods received against a purchase order.',
+          'main.invoices': 'View and print invoices for each purchase order.',
+          'main.view_invoice': 'Printable invoice for this purchase order.',
+          'main.customers': 'Manage your customer base.',
+          'main.add_customer': 'Register a new customer.',
+          'main.edit_customer': 'Update customer details.',
+          'main.products': 'Manage your product catalogue and stock levels.',
+          'main.add_product': 'Add a new product to inventory.',
+          'main.edit_product': 'Update product details and pricing.',
+          'main.offers': 'Create and manage promotional offers.',
+          'main.add_offer': 'Set up a new promotional offer.',
+          'main.edit_offer': 'Update this promotional offer.',
+          'main.reports': 'View and export summary reports.',
+          'main.reports_aging': 'Overdue vendor balances grouped by age bucket.',
+          'main.analytics': 'Business insights and trends across the catalogue.',
+          'main.users': 'Manage system user accounts and roles.',
+          'main.add_user': 'Create a new system user.',
+          'main.edit_user': 'Update this user account.',
+          'main.profile': 'Your account information.',
+          'auth.profile': 'Your account information.',
+          'main.change_password': 'Update your login password.',
+          'auth.change_password': 'Update your login password.',
+          'main.settings': 'Configure company and application settings.'
+        } %}
+
         <!-- Clean White Header Navbar -->
         <header class="top-app-header-clean">
           <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
@@ -122,10 +204,10 @@
               </button>
               <div>
                 <h1 class="page-title mb-0" style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">
-                  {% block page_title %}Dashboard{% endblock %}
+                  {% block page_title %}{{ page_titles.get(request.endpoint, 'Dashboard') }}{% endblock %}
                 </h1>
                 <p class="text-muted small mb-0 d-none d-sm-block" style="font-size: 0.78rem;">
-                  {% block page_subtitle %}Welcome back, {{ current_user.name.split()[0] if current_user.name else 'Administrator' }}! Here's what's happening today.{% endblock %}
+                  {% block page_subtitle %}{{ page_subtitles.get(request.endpoint, '') }}{% endblock %}
                 </p>
               </div>
             </div>

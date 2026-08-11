@@ -354,12 +354,28 @@ def vendor_detail(vendor_id):
             monthly_data[m_key] = {'purchases': 0, 'payments': 0}
         monthly_data[m_key]['payments'] += pmt.amount_paid
 
+    monthly_data = dict(sorted(monthly_data.items()))
+
+    payment_method_totals = {}
+    for pmt in payments:
+        method = (pmt.payment_method or 'Other').strip()
+        payment_method_totals[method] = payment_method_totals.get(method, 0) + pmt.amount_paid
+    payment_method_data = sorted(payment_method_totals.items(), key=lambda kv: kv[1], reverse=True)
+
+    total_invoiced = vendor.total_purchased
+    total_paid = vendor.total_paid
+    settlement_pct = round((total_paid / total_invoiced * 100) if total_invoiced else 0, 1)
+
     return render_template(
         'vendor_detail.html',
         vendor=vendor,
         purchases=purchases,
         payments=payments,
-        monthly_data=monthly_data
+        monthly_data=monthly_data,
+        payment_method_data=payment_method_data,
+        total_invoiced=total_invoiced,
+        total_paid=total_paid,
+        settlement_pct=settlement_pct
     )
 
 
