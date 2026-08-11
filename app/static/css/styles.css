@@ -684,6 +684,30 @@ body {
   border: 1px solid rgba(220, 38, 38, 0.22);
 }
 
+.auth-alert-banner.alert-message,
+.auth-alert-banner.alert-info {
+  background-color: #eff6ff;
+  color: #1e40af;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+}
+
+.auth-alert-banner.alert-warning {
+  background-color: #fffbeb;
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.alert-svg-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* RESPONSIVE BREAKPOINTS */
 @media (max-width: 991.98px) {
   .app-sidebar-orange {

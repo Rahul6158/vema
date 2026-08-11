@@ -48,7 +48,7 @@
             {% if messages %}
               {% for category, msg in messages %}
                 <div class="auth-alert-banner alert-{{ category }}">
-                  <svg class="alert-svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <svg class="alert-svg-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                   <span>{{ msg }}</span>
                 </div>
               {% endfor %}
