@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% block page_title %}Vendor Outstanding Aging Report{% endblock %}
+{% block page_subtitle %}Classify unpaid balances into 0-30, 31-60, 61-90, and 90+ days overdue buckets.{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="{{ url_for('main.reports') }}" class="btn btn-outline-secondary btn-sm">← Back to Reports</a>
+    <a href="{{ url_for('main.reports_export', format='csv') }}" class="btn btn-orange-primary">Export Aging CSV</a>
+</div>
+
+<div class="card border-0">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Vendor Name</th>
+                    <th>Contact Phone</th>
+                    <th>Aging Bucket</th>
+                    <th class="text-center">Days Overdue</th>
+                    <th class="text-end">Outstanding Amount</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in aging_data %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('main.vendor_detail', vendor_id=item.vendor.id) }}" class="text-dark text-decoration-none fw-bold">
+                            🏢 {{ item.vendor.vendor_name }}
+                        </a>
+                    </td>
+                    <td class="font-mono small">{{ item.vendor.phone or 'N/A' }}</td>
+                    <td>
+                        {% if item.bucket == '90+ Days' %}
+                        <span class="badge bg-danger">🔴 90+ Days</span>
+                        {% elif item.bucket == '61-90 Days' %}
+                        <span class="badge bg-warning text-dark">🟠 61-90 Days</span>
+                        {% elif item.bucket == '31-60 Days' %}
+                        <span class="badge bg-info text-dark">🟡 31-60 Days</span>
+                        {% else %}
+                        <span class="badge bg-secondary">🟢 0-30 Days</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center font-mono fw-bold">{{ item.days_overdue }} days</td>
+                    <td class="text-end font-mono fw-bold text-danger">₹{{ "{:,.2f}".format(item.outstanding) }}</td>
+                    <td class="text-end">
+                        <a href="{{ url_for('main.vendor_ledger', vendor_id=item.vendor.id) }}" class="btn btn-sm btn-outline-primary">Ledger</a>
+                        <form method="POST" action="{{ url_for('main.vendor_whatsapp', vendor_id=item.vendor.id) }}" target="_blank" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-success">WhatsApp</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state-box p-4 text-center">
+                            <p class="text-success fw-bold mb-0">🎉 All vendor balances are fully settled! No overdue balances.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

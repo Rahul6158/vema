@@ -93,12 +93,19 @@ def test_vendor_crm():
                 '/',
                 '/vendors',
                 f'/vendors/{vendor.id}',
+                f'/vendors/{vendor.id}/ledger',
                 '/vendors/add',
                 '/purchases',
                 '/purchases/add',
                 '/payments',
                 '/payments/add',
+                '/grn',
+                '/grn/add',
+                '/invoices',
+                '/analytics',
                 '/reports',
+                '/reports/aging',
+                '/reports/export',
                 '/products',
                 '/products/add',
                 '/customers',
@@ -112,6 +119,7 @@ def test_vendor_crm():
                 '/profile',
                 '/change-password'
             ]
+
 
             for route in routes_to_test:
                 res = client.get(route)

@@ -1,0 +1,93 @@
+{% extends "layout.html" %}
+
+{% block page_title %}Advanced Analytics Dashboard{% endblock %}
+{% block page_subtitle %}In-depth performance metrics, vendor volume ranking, and purchase vs. payment trends.{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Top Vendor Volume Ranking Table & Chart -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header border-0 bg-white py-3">
+                <h5 class="mb-0 fw-bold">Vendor Volume Ranking</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Vendor Name</th>
+                            <th class="text-end">Total Purchased</th>
+                            <th class="text-end">Total Paid</th>
+                            <th class="text-end">Outstanding</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in vendor_totals %}
+                        <tr>
+                            <td class="font-mono text-muted">#{{ loop.index }}</td>
+                            <td>
+                                <a href="{{ url_for('main.vendor_detail', vendor_id=v.id) }}" class="text-dark fw-bold text-decoration-none">
+                                    🏢 {{ v.name }}
+                                </a>
+                            </td>
+                            <td class="text-end font-mono fw-bold">₹{{ "{:,.2f}".format(v.purchases) }}</td>
+                            <td class="text-end font-mono text-success">₹{{ "{:,.2f}".format(v.payments) }}</td>
+                            <td class="text-end font-mono {% if v.balance > 0 %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                                ₹{{ "{:,.2f}".format(v.balance) }}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center text-muted">No vendor data.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header border-0 bg-white py-3">
+                <h5 class="mb-0 fw-bold">Monthly Cumulative Comparison</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="overallAnalyticsChart" height="260"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const months = {{ monthly_data.keys() | list | tojson }};
+    const purchases = {{ monthly_data.values() | map(attribute='purchases') | list | tojson }};
+    const payments = {{ monthly_data.values() | map(attribute='payments') | list | tojson }};
+
+    new Chart(document.getElementById('overallAnalyticsChart'), {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [
+                {
+                    label: 'Gross Purchases (₹)',
+                    data: purchases,
+                    backgroundColor: '#ea580c'
+                },
+                {
+                    label: 'Settled Payments (₹)',
+                    data: payments,
+                    backgroundColor: '#16a34a'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+});
+</script>
+{% endblock %}

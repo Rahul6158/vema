@@ -10,15 +10,29 @@
                 <span class="badge badge-secondary font-mono mb-2">VENDOR ID #{{ vendor.id }}</span>
                 <h1 class="page-title mb-1">{{ vendor.vendor_name }}</h1>
                 <div class="text-muted small d-flex flex-wrap gap-3 mt-1">
-                    <span>Phone: <strong class="text-dark font-mono">{{ vendor.phone or 'N/A' }}</strong></span>
-                    <span>Location: <strong class="text-dark">{{ vendor.city or '-' }}{% if vendor.city and vendor.state %}, {% endif %}{{ vendor.state or '' }}</strong></span>
+                    <span>📞 <strong class="text-dark font-mono">{{ vendor.phone or 'N/A' }}</strong></span>
+                    <span>📍 <strong class="text-dark">{{ vendor.city or '-' }}{% if vendor.city and vendor.state %}, {% endif %}{{ vendor.state or '' }}</strong></span>
+                    {% if vendor.contact_person %}<span>👤 Contact: <strong class="text-dark">{{ vendor.contact_person }}</strong></span>{% endif %}
+                    {% if vendor.vendor_type %}<span>🏭 Type: <strong class="text-dark">{{ vendor.vendor_type }}</strong></span>{% endif %}
+                    {% if vendor.status %}
+                    <span>
+                        <span class="badge {% if vendor.status == 'Active' %}badge-success{% else %}badge-danger{% endif %}">
+                            {{ vendor.status }}
+                        </span>
+                    </span>
+                    {% endif %}
                 </div>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ url_for('main.vendor_ledger', vendor_id=vendor.id) }}" class="btn btn-outline-dark">📖 View Ledger</a>
                 <a href="{{ url_for('main.add_purchase', vendor_id=vendor.id) }}" class="btn btn-primary">+ Add Purchase</a>
                 <a href="{{ url_for('main.add_payment', vendor_id=vendor.id) }}" class="btn btn-secondary">+ Record Payment</a>
+                <form method="POST" action="{{ url_for('main.vendor_whatsapp', vendor_id=vendor.id) }}" target="_blank" class="d-inline">
+                    <button type="submit" class="btn btn-outline-success">💬 WhatsApp</button>
+                </form>
                 <a href="{{ url_for('main.edit_vendor', vendor_id=vendor.id) }}" class="btn btn-outline-primary">Edit Details</a>
             </div>
+
         </div>
     </div>
 </div>
@@ -137,6 +151,7 @@
                     <th>Payment Date</th>
                     <th>Method</th>
                     <th class="text-end">Amount Paid</th>
+                    <th>Reference No.</th>
                     <th>Proof Attachment</th>
                 </tr>
             </thead>
@@ -146,6 +161,7 @@
                     <td class="fw-semibold font-mono">{{ pmt.payment_date }}</td>
                     <td><span class="badge badge-secondary">{{ pmt.payment_method }}</span></td>
                     <td class="fw-bold text-success text-end font-mono">₹{{ "{:,.2f}".format(pmt.amount_paid) }}</td>
+                    <td class="font-mono small text-muted">{{ pmt.reference_number or '-' }}</td>
                     <td>
                         {% if pmt.attachment %}
                         <a href="{{ url_for('main.uploaded_file', filename=pmt.attachment) }}" target="_blank" class="btn btn-secondary py-0 px-2" style="font-size: 0.75rem;">View Receipt</a>
@@ -156,7 +172,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="4">
+                    <td colspan="5">
                         <div class="empty-state-box">
                             <p class="mb-0 small">No payments recorded for this vendor yet.</p>
                         </div>

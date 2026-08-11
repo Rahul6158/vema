@@ -76,10 +76,42 @@
 
       <hr class="form-section-divider">
 
-      <!-- SECTION 3: Status -->
+      <!-- SECTION 3: Tax & Banking -->
+      <div class="form-section-header">
+        <p class="form-section-title">💳 Tax & Banking Details</p>
+      </div>
+      <div class="form-section-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">GST Number</label>
+            <input type="text" name="gst_number" class="form-control font-mono" placeholder="27AAAAA0000A1Z5"
+                   value="{{ vendor.gst_number if vendor and vendor.gst_number else '' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">PAN Number</label>
+            <input type="text" name="pan_number" class="form-control font-mono" placeholder="ABCDE1234F"
+                   value="{{ vendor.pan_number if vendor and vendor.pan_number else '' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Bank Account Number</label>
+            <input type="text" name="bank_account" class="form-control font-mono" placeholder="91802000000000"
+                   value="{{ vendor.bank_account if vendor and vendor.bank_account else '' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">IFSC Code</label>
+            <input type="text" name="ifsc_code" class="form-control font-mono" placeholder="HDFC0001234"
+                   value="{{ vendor.ifsc_code if vendor and vendor.ifsc_code else '' }}">
+          </div>
+        </div>
+      </div>
+
+      <hr class="form-section-divider">
+
+      <!-- SECTION 4: Status -->
       <div class="form-section-header">
         <p class="form-section-title">⚙️ Account Status</p>
       </div>
+
       <div class="form-section-body">
         <label class="form-label d-block mb-2">Vendor Status</label>
         <div class="form-status-toggle" style="max-width: 320px;">

@@ -233,9 +233,60 @@ class Product:
         return product
 
 
+class GoodsReceived:
+    def __init__(self, id=None, grn_number='', purchase_id=None, received_date=None,
+                 received_qty=0, condition_notes='', received_by='', created_at=None):
+        self.id = id
+        self.grn_number = grn_number or ''
+        self.purchase_id = purchase_id
+        self.received_date = _parse_date(received_date) or date.today()
+        self.received_qty = int(received_qty or 0)
+        self.condition_notes = condition_notes or ''
+        self.received_by = received_by or ''
+        self.created_at = _parse_datetime(created_at)
+        self._storage = None
+
+    def set_storage(self, storage):
+        self._storage = storage
+
+    @property
+    def purchase(self):
+        if self._storage and self.purchase_id is not None:
+            return self._storage.get_purchase(self.purchase_id)
+        return None
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'grn_number': self.grn_number,
+            'purchase_id': self.purchase_id,
+            'received_date': self.received_date.isoformat() if self.received_date else None,
+            'received_qty': self.received_qty,
+            'condition_notes': self.condition_notes,
+            'received_by': self.received_by,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+
+    @classmethod
+    def from_dict(cls, data, storage=None):
+        grn = cls(
+            id=data.get('id'),
+            grn_number=data.get('grn_number', ''),
+            purchase_id=data.get('purchase_id'),
+            received_date=data.get('received_date'),
+            received_qty=data.get('received_qty', 0),
+            condition_notes=data.get('condition_notes', ''),
+            received_by=data.get('received_by', ''),
+            created_at=data.get('created_at')
+        )
+        grn._storage = storage
+        return grn
+
+
 class Vendor:
     def __init__(self, id=None, vendor_name='', phone='', state='', city='',
                  contact_person='', vendor_type='', status='Active',
+                 gst_number='', pan_number='', bank_account='', ifsc_code='',
                  created_at=None, updated_at=None):
         self.id = id
         self.vendor_name = vendor_name
@@ -245,6 +296,10 @@ class Vendor:
         self.contact_person = contact_person or ''
         self.vendor_type = vendor_type or ''
         self.status = status or 'Active'
+        self.gst_number = gst_number or ''
+        self.pan_number = pan_number or ''
+        self.bank_account = bank_account or ''
+        self.ifsc_code = ifsc_code or ''
         self.created_at = _parse_datetime(created_at)
         self.updated_at = _parse_datetime(updated_at) if updated_at else self.created_at
         self._storage = None
@@ -309,6 +364,10 @@ class Vendor:
             'contact_person': self.contact_person,
             'vendor_type': self.vendor_type,
             'status': self.status,
+            'gst_number': self.gst_number,
+            'pan_number': self.pan_number,
+            'bank_account': self.bank_account,
+            'ifsc_code': self.ifsc_code,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -324,11 +383,16 @@ class Vendor:
             contact_person=data.get('contact_person', ''),
             vendor_type=data.get('vendor_type', ''),
             status=data.get('status', 'Active'),
+            gst_number=data.get('gst_number', ''),
+            pan_number=data.get('pan_number', ''),
+            bank_account=data.get('bank_account', ''),
+            ifsc_code=data.get('ifsc_code', ''),
             created_at=data.get('created_at'),
             updated_at=data.get('updated_at')
         )
         vendor._storage = storage
         return vendor
+
 
 
 class Payment:

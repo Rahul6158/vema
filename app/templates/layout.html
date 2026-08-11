@@ -16,14 +16,21 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
   </head>
-  <body>
-    {% if current_user.is_authenticated %}
+  <body    {% if current_user.is_authenticated %}
     <div class="d-flex min-vh-100">
       
-      <!-- Left Orange Sidebar (Exact Match to Reference Image) -->
-      <aside class="app-sidebar-orange d-none d-lg-flex flex-column">
-        <!-- Logo Header -->
-        <div class="sidebar-header-orange">
+      <!-- Responsive Sidebar (Offcanvas on Mobile/Tablet, Fixed on Desktop) -->
+      <aside class="offcanvas-lg offcanvas-start app-sidebar-orange flex-column" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <!-- Mobile Offcanvas Header -->
+        <div class="offcanvas-header d-flex d-lg-none justify-content-between align-items-center p-3 border-bottom border-white border-opacity-10">
+          <a href="{{ url_for('main.dashboard') }}" class="d-block">
+            <img src="{{ url_for('static', filename='vema-logo.png') }}" alt="VEMA Logo" style="height: 40px; filter: brightness(0) invert(1);">
+          </a>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas" aria-label="Close"></button>
+        </div>
+
+        <!-- Logo Header (Desktop) -->
+        <div class="sidebar-header-orange d-none d-lg-block">
           <a href="{{ url_for('main.dashboard') }}" class="d-block text-center">
             <img src="{{ url_for('static', filename='vema-logo.png') }}" alt="VEMA Logo" class="sidebar-brand-logo-white">
           </a>
@@ -46,12 +53,12 @@
             <span>Purchase Orders</span>
           </a>
 
-          <a class="nav-item-link" href="{{ url_for('main.purchases') }}">
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.grn_list')) %}active{% endif %}" href="{{ url_for('main.grn_list') }}">
             <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M21 8-9-4-9 4 9 4 9-4z"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/></svg>
             <span>Goods Received</span>
           </a>
 
-          <a class="nav-item-link" href="{{ url_for('main.purchases') }}">
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.invoices')) %}active{% endif %}" href="{{ url_for('main.invoices') }}">
             <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <span>Invoices</span>
           </a>
@@ -66,12 +73,12 @@
             <span>Products</span>
           </a>
 
-          <a class="nav-item-link {% if request.path.startswith(url_for('main.reports')) %}active{% endif %}" href="{{ url_for('main.reports') }}">
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.reports')) and not request.path.startswith(url_for('main.analytics')) %}active{% endif %}" href="{{ url_for('main.reports') }}">
             <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             <span>Reports</span>
           </a>
 
-          <a class="nav-item-link {% if request.path.startswith(url_for('main.reports')) %}active{% endif %}" href="{{ url_for('main.reports') }}">
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.analytics')) %}active{% endif %}" href="{{ url_for('main.analytics') }}">
             <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
             <span>Analytics</span>
           </a>
@@ -110,9 +117,10 @@
         <header class="top-app-header-clean">
           <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-3">
-              <button class="btn border-0 p-0 d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              <button class="btn border-0 p-1 d-lg-none me-2 text-dark shadow-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" aria-label="Toggle navigation">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
               </button>
+n>
               <div>
                 <h1 class="page-title mb-0" style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">
                   {% block page_title %}Dashboard{% endblock %}
@@ -131,11 +139,12 @@
                 <input type="text" placeholder="Search anything...">
               </div>
 
-              <!-- Bell Icon -->
-              <div class="icon-badge-btn">
+              <!-- Bell Icon (Links to Aging / Overdue Report) -->
+              <a href="{{ url_for('main.reports_aging') }}" class="icon-badge-btn text-dark" title="View Overdue Balances & Alerts">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                <span class="icon-badge-count">3</span>
-              </div>
+                <span class="icon-badge-count bg-danger">!</span>
+              </a>
+
 
               <!-- User Avatar Dropdown -->
               <div class="dropdown">

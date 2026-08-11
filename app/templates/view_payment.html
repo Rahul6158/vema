@@ -57,6 +57,20 @@
                     {% endif %}
                 </div>
 
+                {% if payment.reference_number %}
+                <div class="mb-3">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Reference / Transaction No.</div>
+                    <div class="fw-semibold font-mono">{{ payment.reference_number }}</div>
+                </div>
+                {% endif %}
+
+                {% if payment.notes %}
+                <div class="mb-4">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Notes / Remarks</div>
+                    <div class="p-3 bg-light rounded small">{{ payment.notes }}</div>
+                </div>
+                {% endif %}
+
                 <div class="d-flex justify-content-between align-items-center mt-4 pt-2">
                     <a href="{{ url_for('main.payments') }}" class="btn btn-outline-secondary btn-sm">← Back to Payments</a>
                     {% if payment.vendor %}

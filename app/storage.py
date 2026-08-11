@@ -9,7 +9,7 @@ import sqlite3
 from datetime import date, datetime
 from typing import Any, List
 
-from .models import (Brand, Category, Customer, Offer, OfferMessage, Payment, Product,
+from .models import (Brand, Category, Customer, GoodsReceived, Offer, OfferMessage, Payment, Product,
                      Purchase, PurchaseItem, Role, StoreSetting, User, Vendor,
                      Warranty, WhatsAppMessage)
 
@@ -23,6 +23,7 @@ COLLECTIONS = {
     'purchase_items': ('purchase_item', PurchaseItem),
     'warranties': ('warranty', Warranty),
     'whatsapp_messages': ('whats_app_message', WhatsAppMessage),
+    'goods_received': ('goods_received', GoodsReceived),
     'offers': ('offer', Offer), 'offer_messages': ('offer_message', OfferMessage),
     'settings': ('store_setting', StoreSetting),
 }
@@ -58,6 +59,7 @@ class SQLiteStorage:
                 CREATE TABLE IF NOT EXISTS purchase_item (id INTEGER PRIMARY KEY, purchase_id INTEGER, product_id INTEGER, brand TEXT, model TEXT, capacity TEXT, qty INTEGER, price REAL, total REAL, FOREIGN KEY(purchase_id) REFERENCES purchase(id), FOREIGN KEY(product_id) REFERENCES product(id));
                 CREATE TABLE IF NOT EXISTS warranty (id INTEGER PRIMARY KEY, purchase_id INTEGER, applicable INTEGER, duration TEXT, start_date TEXT, end_date TEXT, document TEXT, FOREIGN KEY(purchase_id) REFERENCES purchase(id));
                 CREATE TABLE IF NOT EXISTS whats_app_message (id INTEGER PRIMARY KEY, purchase_id INTEGER, message_id TEXT, status TEXT, sent_at TEXT, error TEXT, FOREIGN KEY(purchase_id) REFERENCES purchase(id));
+                CREATE TABLE IF NOT EXISTS goods_received (id INTEGER PRIMARY KEY, grn_number TEXT, purchase_id INTEGER, received_date TEXT, received_qty INTEGER, condition_notes TEXT, received_by TEXT, created_at TEXT, FOREIGN KEY(purchase_id) REFERENCES purchase(id));
                 CREATE TABLE IF NOT EXISTS offer (id INTEGER PRIMARY KEY, title TEXT NOT NULL, description TEXT, product_ids TEXT, start_date TEXT, end_date TEXT, active INTEGER DEFAULT 1, image TEXT, message TEXT);
                 CREATE TABLE IF NOT EXISTS offer_message (id INTEGER PRIMARY KEY, offer_id INTEGER, customer_id INTEGER, status TEXT, sent_at TEXT, error TEXT, FOREIGN KEY(offer_id) REFERENCES offer(id), FOREIGN KEY(customer_id) REFERENCES customer(id));
                 CREATE TABLE IF NOT EXISTS store_setting (id INTEGER PRIMARY KEY, "key" TEXT NOT NULL UNIQUE, value TEXT);
@@ -77,12 +79,16 @@ class SQLiteStorage:
 
             # Migrate vendor table: add new PRD columns if missing
             vendor_cols = [r['name'] for r in conn.execute('PRAGMA table_info(vendor)').fetchall()]
-            for col_name, col_type in [('contact_person', 'TEXT'), ('vendor_type', 'TEXT'), ('status', "TEXT DEFAULT 'Active'")]:
+            for col_name, col_type in [
+                ('contact_person', 'TEXT'), ('vendor_type', 'TEXT'), ('status', "TEXT DEFAULT 'Active'"),
+                ('gst_number', 'TEXT'), ('pan_number', 'TEXT'), ('bank_account', 'TEXT'), ('ifsc_code', 'TEXT')
+            ]:
                 if col_name not in vendor_cols:
                     try:
                         conn.execute(f'ALTER TABLE vendor ADD COLUMN {col_name} {col_type}')
                     except Exception:
                         pass
+
 
             # Migrate payment table: add new PRD columns if missing
             payment_cols = [r['name'] for r in conn.execute('PRAGMA table_info(payment)').fetchall()]
@@ -108,6 +114,13 @@ class SQLiteStorage:
                     obj._storage = self
                 values.append(obj)
             setattr(self, name, values)
+
+        # Seed roles if empty or incomplete
+        existing_role_names = {r.name for r in self.roles}
+        for rname in ['Admin', 'Manager', 'Accountant', 'Viewer', 'Staff']:
+            if rname not in existing_role_names:
+                self.add_role(Role(name=rname))
+
 
     def _next_id(self, items):
         return max((item.id or 0 for item in items), default=0) + 1
@@ -154,6 +167,7 @@ class SQLiteStorage:
     def get_product(self, id): return self._get('products', id)
     def get_purchase(self, id): return self._get('purchases', id)
     def get_payment(self, id): return self._get('payments', id)
+    def get_goods_received(self, id): return self._get('goods_received', id)
     def get_offer(self, id): return self._get('offers', id)
     def find_purchase_by_code(self, code): return next((x for x in self.purchases if x.purchase_id == code), None)
     def get_purchase_items(self, id): return [x for x in self.purchase_items if x.purchase_id == id]
@@ -206,12 +220,14 @@ class SQLiteStorage:
     def add_product(self, x): return self._add('products', x)
     def add_purchase(self, x): return self._add('purchases', x)
     def add_payment(self, x): return self._add('payments', x)
+    def add_goods_received(self, x): return self._add('goods_received', x)
     def add_purchase_item(self, x): return self._add('purchase_items', x)
     def add_warranty(self, x): return self._add('warranties', x)
     def add_whatsapp_message(self, x): return self._add('whatsapp_messages', x)
     def add_offer(self, x): return self._add('offers', x)
     def add_offer_message(self, x): return self._add('offer_messages', x)
     def add_setting(self, x): return self._add('settings', x)
+
 
 
 storage = SQLiteStorage()

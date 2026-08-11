@@ -3,14 +3,16 @@ from flask import abort
 from flask_login import current_user
 
 
-def role_required(role_name):
+def role_required(*role_names):
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
             if not current_user.is_authenticated:
                 abort(403)
-            if not current_user.role or current_user.role.name != role_name:
+            user_role = current_user.role.name if current_user.role else 'Staff'
+            if user_role != 'Admin' and user_role not in role_names:
                 abort(403)
             return f(*args, **kwargs)
         return wrapped
     return decorator
+

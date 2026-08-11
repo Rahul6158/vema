@@ -18,14 +18,21 @@ def get_object_or_404(obj):
     return obj
 
 
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'webp', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'txt'}
+
 def save_attachment(file_obj):
     if not file_obj or not file_obj.filename:
+        return ''
+    ext = file_obj.filename.rsplit('.', 1)[-1].lower() if '.' in file_obj.filename else ''
+    if ext not in ALLOWED_EXTENSIONS:
+        flash(f"File type .{ext} is not allowed. Upload PDF, Image, or Document files.", "warning")
         return ''
     filename = secure_filename(file_obj.filename)
     unique_name = f"{uuid.uuid4().hex[:10]}_{filename}"
     upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_name)
     file_obj.save(upload_path)
     return unique_name
+
 
 
 main_bp = Blueprint('main', __name__)
@@ -63,40 +70,90 @@ def dashboard():
     if time_filter == 'day':
         filter_start = today
         filter_end = today
+        prev_start = today - timedelta(days=1)
+        prev_end = today - timedelta(days=1)
     elif time_filter == 'week':
         filter_start = today - timedelta(days=6)
         filter_end = today
+        prev_start = today - timedelta(days=13)
+        prev_end = today - timedelta(days=7)
     elif time_filter == 'month':
         filter_start = date(today.year, today.month, 1)
         filter_end = today
+        # Previous month
+        if today.month == 1:
+            prev_start = date(today.year - 1, 12, 1)
+            prev_end = date(today.year - 1, 12, 31)
+        else:
+            prev_start = date(today.year, today.month - 1, 1)
+            import calendar
+            prev_end = date(today.year, today.month - 1, calendar.monthrange(today.year, today.month - 1)[1])
     elif time_filter == 'quarter':
         q_month = ((today.month - 1) // 3) * 3 + 1
         filter_start = date(today.year, q_month, 1)
         filter_end = today
+        prev_q_month = q_month - 3 if q_month > 3 else 10
+        prev_q_year = today.year if q_month > 3 else today.year - 1
+        prev_start = date(prev_q_year, prev_q_month, 1)
+        prev_end = filter_start - timedelta(days=1)
     elif time_filter == 'year':
         filter_start = date(today.year, 1, 1)
         filter_end = today
+        prev_start = date(today.year - 1, 1, 1)
+        prev_end = date(today.year - 1, 12, 31)
     elif time_filter == 'custom' and start_date_param and end_date_param:
         try:
             filter_start = date.fromisoformat(start_date_param)
             filter_end = date.fromisoformat(end_date_param)
+            delta = filter_end - filter_start
+            prev_start = filter_start - timedelta(days=delta.days + 1)
+            prev_end = filter_start - timedelta(days=1)
         except ValueError:
             filter_start = date(today.year, today.month, 1)
             filter_end = today
+            prev_start = prev_end = date(today.year, today.month, 1) - timedelta(days=1)
     else:
         filter_start = date(today.year, today.month, 1)
         filter_end = today
+        if today.month == 1:
+            prev_start = date(today.year - 1, 12, 1)
+            prev_end = date(today.year - 1, 12, 31)
+        else:
+            import calendar
+            prev_start = date(today.year, today.month - 1, 1)
+            prev_end = date(today.year, today.month - 1, calendar.monthrange(today.year, today.month - 1)[1])
 
     selected_vendor = storage.get_vendor(selected_vendor_id) if selected_vendor_id else None
+
+    # Current period totals
+    cur_purchases = sum(p.total_amount for p in all_purchases
+                        if filter_start <= (p.purchase_date or p.created_at.date()) <= filter_end)
+    cur_payments = sum(p.amount_paid for p in all_payments
+                       if filter_start <= (p.payment_date or p.created_at.date()) <= filter_end)
+
+    # Previous period totals for % change
+    prev_purchases = sum(p.total_amount for p in all_purchases
+                         if prev_start <= (p.purchase_date or p.created_at.date()) <= prev_end)
+    prev_payments = sum(p.amount_paid for p in all_payments
+                        if prev_start <= (p.payment_date or p.created_at.date()) <= prev_end)
+
+    def pct_change(cur, prev):
+        if prev == 0:
+            return 100.0 if cur > 0 else 0.0
+        return ((cur - prev) / prev) * 100
+
+    purchases_pct_change = pct_change(cur_purchases, prev_purchases)
+    payments_pct_change = pct_change(cur_payments, prev_payments)
+    outstanding_change = cur_purchases - cur_payments  # positive = more bought than paid this period
+
+    # Vendors added this calendar month
+    this_month_start = date(today.year, today.month, 1)
+    vendors_added_this_month = sum(1 for v in vendors if v.created_at and v.created_at.date() >= this_month_start)
 
     # Vendor Comparison analytics
     vendor_purchase_comparison = []
     vendor_payment_comparison = []
-
-    if selected_vendor:
-        target_vendors = [selected_vendor]
-    else:
-        target_vendors = vendors
+    target_vendors = [selected_vendor] if selected_vendor else vendors
 
     for v in target_vendors:
         v_purchases = sum(p.total_amount for p in v.purchases if filter_start <= (p.purchase_date or p.created_at.date()) <= filter_end)
@@ -124,11 +181,16 @@ def dashboard():
         total_payments_val=total_payments_val,
         total_outstanding=total_outstanding,
         total_vendors_count=total_vendors_count,
+        vendors_added_this_month=vendors_added_this_month,
+        purchases_pct_change=purchases_pct_change,
+        payments_pct_change=payments_pct_change,
+        outstanding_change=outstanding_change,
         vendor_purchase_comparison=vendor_purchase_comparison,
         vendor_payment_comparison=vendor_payment_comparison,
         recent_purchases=recent_purchases,
         recent_payments=recent_payments
     )
+
 
 
 # ==============================================================================
@@ -181,12 +243,18 @@ def add_vendor():
         contact_person = request.form.get('contact_person', '').strip()
         vendor_type = request.form.get('vendor_type', '').strip()
         status = request.form.get('status', 'Active').strip()
+        gst_number = request.form.get('gst_number', '').strip()
+        pan_number = request.form.get('pan_number', '').strip()
+        bank_account = request.form.get('bank_account', '').strip()
+        ifsc_code = request.form.get('ifsc_code', '').strip()
+
         if not vendor_name:
             flash('Vendor Name is required.', 'danger')
             return redirect(url_for('main.add_vendor'))
         vendor = Vendor(
             vendor_name=vendor_name, phone=phone, state=state, city=city,
-            contact_person=contact_person, vendor_type=vendor_type, status=status
+            contact_person=contact_person, vendor_type=vendor_type, status=status,
+            gst_number=gst_number, pan_number=pan_number, bank_account=bank_account, ifsc_code=ifsc_code
         )
         storage.add_vendor(vendor)
         flash(f'Vendor "{vendor_name}" created successfully.', 'success')
@@ -236,11 +304,16 @@ def edit_vendor(vendor_id):
         vendor.contact_person = request.form.get('contact_person', '').strip()
         vendor.vendor_type = request.form.get('vendor_type', '').strip()
         vendor.status = request.form.get('status', 'Active').strip()
+        vendor.gst_number = request.form.get('gst_number', '').strip()
+        vendor.pan_number = request.form.get('pan_number', '').strip()
+        vendor.bank_account = request.form.get('bank_account', '').strip()
+        vendor.ifsc_code = request.form.get('ifsc_code', '').strip()
         vendor.updated_at = datetime.utcnow()
         storage.save_vendors()
         flash('Vendor details updated.', 'success')
         return redirect(url_for('main.vendor_detail', vendor_id=vendor.id))
     return render_template('vendor_form.html', vendor=vendor)
+
 
 
 @main_bp.route('/vendors/<int:vendor_id>/delete', methods=['POST'])
@@ -794,3 +867,242 @@ def settings():
         return redirect(url_for('main.settings'))
     settings_dict = {s.key: s.value for s in storage.settings}
     return render_template('settings.html', settings=settings_dict)
+
+
+
+@main_bp.route('/reports/export')
+@login_required
+def reports_export():
+    import csv
+    import io
+    from flask import Response
+    fmt = request.args.get('format', 'csv')
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Record Type', 'ID / Code', 'Date', 'Vendor Name', 'Method / Brand', 'Amount (INR)', 'Reference / Model'])
+
+    for p in storage.purchases:
+        vendor_name = p.vendor.vendor_name if p.vendor else 'N/A'
+        writer.writerow(['Purchase', p.purchase_id, p.purchase_date, vendor_name, p.brand_name, p.total_amount, p.model_name])
+
+    for pmt in storage.payments:
+        vendor_name = pmt.vendor.vendor_name if pmt.vendor else 'N/A'
+        writer.writerow(['Payment', f"PMT-{pmt.id}", pmt.payment_date, vendor_name, pmt.payment_method, pmt.amount_paid, pmt.reference_number])
+
+    csv_data = output.getvalue()
+    return Response(
+        csv_data,
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment;filename=vema_reports_export_{date.today().isoformat()}.csv"}
+    )
+
+
+@main_bp.route('/analytics')
+@login_required
+def analytics():
+    vendors = sorted(storage.vendors, key=lambda v: v.vendor_name)
+    purchases = storage.purchases
+    payments = storage.payments
+
+    vendor_totals = []
+    for v in vendors:
+        vendor_totals.append({
+            'id': v.id,
+            'name': v.vendor_name,
+            'purchases': v.total_purchased,
+            'payments': v.total_paid,
+            'balance': v.outstanding_balance
+        })
+    vendor_totals.sort(key=lambda x: x['purchases'], reverse=True)
+
+    monthly = {}
+    for p in purchases:
+        m = (p.purchase_date or date.today()).strftime('%Y-%m')
+        if m not in monthly: monthly[m] = {'purchases': 0, 'payments': 0}
+        monthly[m]['purchases'] += p.total_amount
+    for pmt in payments:
+        m = (pmt.payment_date or date.today()).strftime('%Y-%m')
+        if m not in monthly: monthly[m] = {'purchases': 0, 'payments': 0}
+        monthly[m]['payments'] += pmt.amount_paid
+
+    sorted_months = sorted(monthly.keys())
+    monthly_data = {m: monthly[m] for m in sorted_months}
+
+    return render_template('analytics.html', vendors=vendors, vendor_totals=vendor_totals, monthly_data=monthly_data)
+
+
+@main_bp.route('/grn')
+@login_required
+def grn_list():
+    grns = sorted(storage.goods_received, key=lambda g: g.received_date or date.today(), reverse=True)
+    return render_template('grn_list.html', grns=grns)
+
+
+@main_bp.route('/grn/add', methods=['GET', 'POST'])
+@login_required
+def add_grn():
+    purchases = sorted(storage.purchases, key=lambda p: p.purchase_id)
+    if request.method == 'POST':
+        purchase_id = request.form.get('purchase_id', type=int)
+        received_date = request.form.get('received_date') or date.today().isoformat()
+        received_qty = request.form.get('received_qty', type=int) or 0
+        condition_notes = request.form.get('condition_notes', '').strip()
+        received_by = request.form.get('received_by', '').strip() or current_user.name
+
+        grn_num = f"GRN-{len(storage.goods_received) + 1001}"
+        grn = GoodsReceived(grn_number=grn_num, purchase_id=purchase_id, received_date=received_date,
+                            received_qty=received_qty, condition_notes=condition_notes, received_by=received_by)
+        storage.add_goods_received(grn)
+        flash(f'Goods Received Note {grn_num} recorded successfully.', 'success')
+        return redirect(url_for('main.grn_list'))
+    return render_template('new_grn.html', purchases=purchases, today_date=date.today().isoformat())
+
+
+@main_bp.route('/invoices')
+@login_required
+def invoices():
+    purchases = sorted(storage.purchases, key=lambda p: p.purchase_date or date.today(), reverse=True)
+    return render_template('invoices.html', purchases=purchases)
+
+
+@main_bp.route('/invoices/<int:purchase_id>')
+@login_required
+def view_invoice(purchase_id):
+    purchase = get_object_or_404(storage.get_purchase(purchase_id))
+    setting_store_name = storage.get_setting('store_name', 'VEMA Procurement System')
+    setting_address = storage.get_setting('store_address', 'Main Industrial Area, Suite 400')
+    setting_gst = storage.get_setting('store_gst', '27AAACV1234F1Z5')
+    return render_template('invoice.html', purchase=purchase, store_name=setting_store_name, store_address=setting_address, store_gst=setting_gst)
+
+
+@main_bp.route('/vendors/<int:vendor_id>/ledger')
+@login_required
+def vendor_ledger(vendor_id):
+    vendor = get_object_or_404(storage.get_vendor(vendor_id))
+    entries = []
+    for p in vendor.purchases:
+        entries.append({
+            'date': p.purchase_date or p.created_at.date(),
+            'type': 'Purchase Order',
+            'ref': p.purchase_id,
+            'desc': f"{p.brand_name or ''} {p.model_name or ''}".strip() or 'Purchase',
+            'debit': p.total_amount,
+            'credit': 0,
+            'link': url_for('main.view_purchase', purchase_id=p.id)
+        })
+    for pmt in vendor.payments:
+        entries.append({
+            'date': pmt.payment_date or pmt.created_at.date(),
+            'type': 'Payment',
+            'ref': pmt.reference_number or f"PMT-{pmt.id}",
+            'desc': f"Paid via {pmt.payment_method}",
+            'debit': 0,
+            'credit': pmt.amount_paid,
+            'link': url_for('main.view_payment', payment_id=pmt.id)
+        })
+    entries.sort(key=lambda x: x['date'])
+
+    running_bal = 0
+    for e in entries:
+        running_bal += (e['debit'] - e['credit'])
+        e['running_balance'] = running_bal
+
+    return render_template('vendor_ledger.html', vendor=vendor, entries=entries, final_balance=running_bal)
+
+
+@main_bp.route('/reports/aging')
+@login_required
+def reports_aging():
+    today = date.today()
+    aging_data = []
+    for v in storage.vendors:
+        if v.outstanding_balance > 0:
+            purchases = sorted(v.purchases, key=lambda p: p.purchase_date or today, reverse=True)
+            oldest_unpaid_date = purchases[-1].purchase_date if purchases else today
+            days_overdue = (today - oldest_unpaid_date).days if oldest_unpaid_date else 0
+
+            bucket = "0-30 Days"
+            if days_overdue > 90: bucket = "90+ Days"
+            elif days_overdue > 60: bucket = "61-90 Days"
+            elif days_overdue > 30: bucket = "31-60 Days"
+
+            aging_data.append({
+                'vendor': v,
+                'outstanding': v.outstanding_balance,
+                'days_overdue': days_overdue,
+                'bucket': bucket
+            })
+
+    aging_data.sort(key=lambda x: x['days_overdue'], reverse=True)
+    return render_template('reports_aging.html', aging_data=aging_data)
+
+
+@main_bp.route('/admin/backup')
+@login_required
+@role_required('Admin')
+def admin_backup():
+    db_path = storage.database_path
+    if os.path.exists(db_path):
+        with open(db_path, 'rb') as f:
+            data = f.read()
+        return Response(
+            data,
+            mimetype="application/x-sqlite3",
+            headers={"Content-Disposition": f"attachment;filename=vema_db_backup_{date.today().isoformat()}.db"}
+        )
+    flash('Database file not found.', 'danger')
+    return redirect(url_for('main.settings'))
+
+
+@main_bp.route('/vendors/<int:vendor_id>/whatsapp', methods=['POST'])
+@login_required
+def vendor_whatsapp(vendor_id):
+    vendor = get_object_or_404(storage.get_vendor(vendor_id))
+    phone = (vendor.phone or '').replace(' ', '').replace('-', '')
+    if not phone:
+        flash('Vendor has no valid phone number for WhatsApp.', 'danger')
+        return redirect(url_for('main.vendor_detail', vendor_id=vendor_id))
+
+    msg = f"Hello {vendor.vendor_name}, your current outstanding balance with VEMA is ₹{vendor.outstanding_balance:,.2f}. Please review your ledger."
+    import urllib.parse
+    whatsapp_url = f"https://wa.me/{phone}?text={urllib.parse.quote(msg)}"
+    return redirect(whatsapp_url)
+
+
+@main_bp.route('/purchases/<int:purchase_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_purchase(purchase_id):
+    purchase = get_object_or_404(storage.get_purchase(purchase_id))
+    vendors = sorted(storage.vendors, key=lambda v: v.vendor_name)
+    if request.method == 'POST':
+        purchase.brand_name = request.form.get('brand_name', '').strip()
+        purchase.model_name = request.form.get('model_name', '').strip()
+        try: purchase.quantity = int(request.form.get('quantity', 1))
+        except ValueError: purchase.quantity = 1
+        try: purchase.unit_price = float(request.form.get('unit_price', 0))
+        except ValueError: purchase.unit_price = 0
+        purchase.total_amount = purchase.quantity * purchase.unit_price
+        purchase.purchase_date = request.form.get('purchase_date') or date.today().isoformat()
+        storage.save_purchases()
+        flash('Purchase record updated successfully.', 'success')
+        return redirect(url_for('main.view_purchase', purchase_id=purchase.id))
+    return render_template('new_purchase.html', purchase=purchase, vendors=vendors)
+
+
+@main_bp.route('/payments/<int:payment_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_payment(payment_id):
+    payment = get_object_or_404(storage.get_payment(payment_id))
+    vendors = sorted(storage.vendors, key=lambda v: v.vendor_name)
+    if request.method == 'POST':
+        try: payment.amount_paid = float(request.form.get('amount_paid', 0))
+        except ValueError: payment.amount_paid = 0
+        payment.payment_method = request.form.get('payment_method', 'Cash')
+        payment.reference_number = request.form.get('reference_number', '').strip()
+        payment.notes = request.form.get('notes', '').strip()
+        payment.payment_date = request.form.get('payment_date') or date.today().isoformat()
+        storage.save_payments()
+        flash('Payment record updated successfully.', 'success')
+        return redirect(url_for('main.view_payment', payment_id=payment.id))
+    return render_template('new_payment.html', payment=payment, vendors=vendors)
+

@@ -1,34 +1,104 @@
-{% extends 'layout.html' %}
+{% extends "layout.html" %}
+
 {% block content %}
-<div class="mb-4">
-  <h3>{{store.name}}</h3>
-  <p class="mb-0">{{store.address}}</p>
-  <p class="mb-0">Phone: {{store.phone}}</p>
-  <p class="mb-0">Email: {{store.email}}</p>
+<style>
+@media print {
+    .sidebar, .top-header, .no-print { display: none !important; }
+    .main-content { margin-left: 0 !important; padding: 0 !important; }
+    .card { border: none !important; shadow: none !important; }
+}
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <a href="{{ url_for('main.invoices') }}" class="btn btn-outline-secondary btn-sm">← Back to Invoices</a>
+    <button onclick="window.print()" class="btn btn-primary">🖨️ Print / Save as PDF</button>
 </div>
-<div class="mb-4">
-  <h5>Invoice {{ invoice_prefix }}{{purchase.purchase_id}}</h5>
-  <p class="mb-0"><strong>Customer:</strong> {{purchase.customer.name if purchase.customer else ''}}</p>
-  <p class="mb-0"><strong>Phone:</strong> {{purchase.customer.phone if purchase.customer else ''}}</p>
-  <p class="mb-0"><strong>Date:</strong> {{purchase.created_at.strftime('%Y-%m-%d')}}</p>
-  <p class="mb-0"><strong>Purchase Type:</strong> {{purchase.purchase_type}}</p>
+
+<div class="card border-0 shadow-sm p-4 p-md-5" style="background: #fff; max-width: 850px; margin: 0 auto;">
+    <!-- Header Row -->
+    <div class="row align-items-start border-bottom pb-4 mb-4">
+        <div class="col-6">
+            <h2 class="fw-bold text-primary mb-1">{{ store_name }}</h2>
+            <div class="text-muted small mb-1">{{ store_address }}</div>
+            <div class="text-muted small">GSTIN: <strong class="font-mono">{{ store_gst }}</strong></div>
+        </div>
+        <div class="col-6 text-end">
+            <h3 class="fw-extrabold text-uppercase text-dark mb-1">TAX INVOICE</h3>
+            <div class="font-mono fw-bold text-muted">INV-{{ purchase.purchase_id }}</div>
+            <div class="small text-muted mt-1">Date: <span class="font-mono">{{ purchase.purchase_date }}</span></div>
+        </div>
+    </div>
+
+    <!-- Vendor Details Row -->
+    <div class="row mb-4 p-3 bg-light rounded">
+        <div class="col-6">
+            <div class="text-uppercase text-muted small font-mono mb-1">Billed From (Vendor)</div>
+            {% if purchase.vendor %}
+            <h5 class="fw-bold mb-1">{{ purchase.vendor.vendor_name }}</h5>
+            <div class="small text-muted">{{ purchase.vendor.city or '' }}, {{ purchase.vendor.state or '' }}</div>
+            <div class="small text-muted">Phone: {{ purchase.vendor.phone or 'N/A' }}</div>
+            {% if purchase.vendor.gst_number %}<div class="small text-muted font-mono">GST: {{ purchase.vendor.gst_number }}</div>{% endif %}
+            {% else %}
+            <div class="text-muted small">Vendor details not linked</div>
+            {% endif %}
+        </div>
+        <div class="col-6 text-end">
+            <div class="text-uppercase text-muted small font-mono mb-1">Billed To</div>
+            <h5 class="fw-bold mb-1">{{ store_name }}</h5>
+            <div class="small text-muted">{{ store_address }}</div>
+        </div>
+    </div>
+
+    <!-- Line Items Table -->
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Item Description</th>
+                    <th>Brand / Model</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-end">Unit Price</th>
+                    <th class="text-end">Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="font-mono">1</td>
+                    <td><strong class="text-dark">{{ purchase.brand_name or 'Purchase Order' }}</strong></td>
+                    <td>{{ purchase.model_name or '-' }}</td>
+                    <td class="text-center font-mono">{{ purchase.quantity }}</td>
+                    <td class="text-end font-mono">₹{{ "{:,.2f}".format(purchase.unit_price) }}</td>
+                    <td class="text-end font-mono fw-bold">₹{{ "{:,.2f}".format(purchase.total_amount) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Totals & Payment Summary -->
+    <div class="row justify-content-end mb-4">
+        <div class="col-md-5">
+            <div class="p-3 bg-light rounded">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">Subtotal:</span>
+                    <span class="font-mono">₹{{ "{:,.2f}".format(purchase.total_amount) }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">Tax (0% included):</span>
+                    <span class="font-mono">₹0.00</span>
+                </div>
+                <hr class="my-2">
+                <div class="d-flex justify-content-between fw-bold fs-5">
+                    <span>Total Amount:</span>
+                    <span class="text-primary font-mono">₹{{ "{:,.2f}".format(purchase.total_amount) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Terms -->
+    <div class="border-top pt-3 text-center text-muted small">
+        <p class="mb-0">This is a computer-generated tax invoice. Authorized signature not required.</p>
+    </div>
 </div>
-<table class="table table-sm">
-  <thead><tr><th>Product</th><th>Brand</th><th>Model</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
-  <tbody>
-    {% for item in purchase.items %}
-      <tr>
-        <td>{{item.product.name if item.product else ''}}</td>
-        <td>{{item.brand}}</td>
-        <td>{{item.model}}</td>
-        <td>{{item.qty}}</td>
-        <td>₹{{item.price}}</td>
-        <td>₹{{item.total}}</td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-<p><strong>Subtotal:</strong> ₹{{purchase.subtotal}}</p>
-<p><strong>Total:</strong> ₹{{purchase.total}}</p>
-<a class="btn btn-secondary" href="/purchase/{{purchase.purchase_id}}">Back to Purchase</a>
 {% endblock %}

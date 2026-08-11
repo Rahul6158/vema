@@ -30,6 +30,7 @@
                     <th>Payment Date</th>
                     <th>Vendor Name</th>
                     <th>Payment Method</th>
+                    <th>Reference No.</th>
                     <th>Amount Paid</th>
                     <th>Payment Proof</th>
                     <th>Vendor Current Balance</th>
@@ -50,6 +51,7 @@
                         {% endif %}
                     </td>
                     <td><span class="badge badge-secondary">{{ pmt.payment_method }}</span></td>
+                    <td class="font-mono small text-muted">{{ pmt.reference_number or '-' }}</td>
                     <td class="fw-bold text-success">₹{{ pmt.amount_paid | round(2) }}</td>
                     <td>
                         {% if pmt.attachment %}
@@ -58,6 +60,7 @@
                         <span class="text-muted small">-</span>
                         {% endif %}
                     </td>
+
                     <td>
                         {% if pmt.vendor %}
                             {% if pmt.vendor.outstanding_balance > 0 %}
@@ -72,6 +75,7 @@
                     <td class="text-end">
                         <div class="btn-group btn-group-sm">
                             <a href="{{ url_for('main.view_payment', payment_id=pmt.id) }}" class="btn btn-outline-primary">View</a>
+                            <a href="{{ url_for('main.edit_payment', payment_id=pmt.id) }}" class="btn btn-outline-secondary">Edit</a>
                             {% if current_user.role and current_user.role.name == 'Admin' %}
                             <form method="POST" action="{{ url_for('main.delete_payment', payment_id=pmt.id) }}" class="d-inline" onsubmit="return confirm('Delete this payment record?');">
                                 <button type="submit" class="btn btn-outline-danger">Delete</button>

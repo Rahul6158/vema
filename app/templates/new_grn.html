@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block page_title %}Record Goods Received Note (GRN){% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="form-page-card">
+            <h2 class="form-page-title mb-4">New Goods Received Note</h2>
+
+            <form method="POST" action="{{ url_for('main.add_grn') }}">
+                <div class="mb-3">
+                    <label class="form-label-custom">Link Purchase Order <span class="text-danger">*</span></label>
+                    <select name="purchase_id" class="form-select-custom" required>
+                        <option value="">-- Select PO Code --</option>
+                        {% for p in purchases %}
+                        <option value="{{ p.id }}">{{ p.purchase_id }} — {{ p.vendor.vendor_name if p.vendor else 'Unlinked' }} ({{ p.brand_name or '' }} {{ p.model_name or '' }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Received Date</label>
+                        <input type="date" name="received_date" class="form-control-custom" value="{{ today_date }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Quantity Received <span class="text-danger">*</span></label>
+                        <input type="number" name="received_qty" class="form-control-custom" min="1" value="1" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label-custom">Received By (Staff Name)</label>
+                    <input type="text" name="received_by" class="form-control-custom" value="{{ current_user.name }}">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label-custom">Condition / Inspection Notes</label>
+                    <textarea name="condition_notes" class="form-control-custom" rows="3" placeholder="e.g. All boxes intact, tested and functioning..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center pt-2">
+                    <a href="{{ url_for('main.grn_list') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-orange-primary">Save GRN Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
