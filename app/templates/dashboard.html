@@ -55,7 +55,7 @@
         <div class="kpi-title-header">REGISTERED VENDORS</div>
         <div class="kpi-value-num">{{ total_vendors_count }}</div>
         <div class="{% if vendors_added_this_month > 0 %}kpi-trend-green{% else %}text-muted small{% endif %} mt-1">
-          {% if vendors_added_this_month > 0 %}↑ {{ vendors_added_this_month }} added this month{% else %}No new vendors this month{% endif %}
+          {% if selected_vendor %}Scope: {{ selected_vendor.vendor_name }}{% elif vendors_added_this_month > 0 %}↑ {{ vendors_added_this_month }} added this month{% else %}No new vendors this month{% endif %}
         </div>
       </div>
     </div>
@@ -133,10 +133,12 @@
     <div class="card-clean h-100">
       <div class="card-header-clean">
         <h2 class="card-title-text mb-0">Purchases by Vendor</h2>
-        <select class="filter-select-clean font-mono" style="width: 110px;">
-          <option>This Month</option>
-          <option>This Year</option>
-        </select>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge font-mono" style="background-color: #fff7ed; color: #ea580c; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">{{ time_filter_label }}</span>
+          <button type="button" class="btn-icon-action" data-enlarge="purchasesByVendorChart" title="Enlarge Graph" data-bs-toggle="modal" data-bs-target="#chartEnlargeModal">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          </button>
+        </div>
       </div>
       <div class="card-body p-3">
         <div style="height: 195px; position: relative;">
@@ -151,10 +153,12 @@
     <div class="card-clean h-100">
       <div class="card-header-clean">
         <h2 class="card-title-text mb-0">Payments by Vendor</h2>
-        <select class="filter-select-clean font-mono" style="width: 110px;">
-          <option>This Month</option>
-          <option>This Year</option>
-        </select>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge font-mono" style="background-color: #f0fdf4; color: #15803d; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">{{ time_filter_label }}</span>
+          <button type="button" class="btn-icon-action" data-enlarge="paymentsDonutChart" title="Enlarge Graph" data-bs-toggle="modal" data-bs-target="#chartEnlargeModal">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          </button>
+        </div>
       </div>
       <div class="card-body p-3">
         <div class="row align-items-center">
@@ -163,7 +167,7 @@
               <canvas id="paymentsDonutChart"></canvas>
               <!-- Center Total Overlay -->
               <div class="position-absolute top-50 start-50 translate-middle text-center pointer-events-none">
-                <div class="fw-bold text-dark font-mono" style="font-size: 0.95rem;">₹60,000</div>
+                <div class="fw-bold text-dark font-mono" style="font-size: 0.95rem;">₹{{ "{:,.0f}".format(payments_total) }}</div>
                 <div class="text-muted small" style="font-size: 0.65rem; font-weight: 700;">Total Settled</div>
               </div>
             </div>
@@ -172,53 +176,20 @@
           <!-- Right Custom Legend Table -->
           <div class="col-md-6 mt-2 mt-md-0">
             <div class="d-flex flex-column gap-1.5" style="font-size: 0.78rem;">
+              {% set donut_palette = ['#ff6b1a', '#f97316', '#fb923c', '#fdba74', '#fed7aa', '#ffedd5'] %}
+              {% if payment_chart_items and payments_total > 0 %}
+              {% for item in payment_chart_items %}
               <div class="d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-1.5">
-                  <span class="rounded-circle" style="width: 7px; height: 7px; background-color: #ff6b1a;"></span>
-                  <span class="vendor-name-text">Samsung India Pvt. Ltd.</span>
+                  <span class="rounded-circle" style="width: 7px; height: 7px; background-color: {{ donut_palette[loop.index0 % donut_palette|length] }};"></span>
+                  <span class="vendor-name-text">{{ item.name }}</span>
                 </div>
-                <span class="font-mono text-muted" style="font-size: 0.75rem;">₹16,50,000 <small class="ms-1">27.5%</small></span>
+                <span class="font-mono text-muted" style="font-size: 0.75rem;">₹{{ "{:,.0f}".format(item.value) }} <small class="ms-1">{{ "%.1f"|format(item.value / payments_total * 100) }}%</small></span>
               </div>
-
-              <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-1.5">
-                  <span class="rounded-circle" style="width: 7px; height: 7px; background-color: #f97316;"></span>
-                  <span class="vendor-name-text">LG Electronics</span>
-                </div>
-                <span class="font-mono text-muted" style="font-size: 0.75rem;">₹11,60,000 <small class="ms-1">19.3%</small></span>
-              </div>
-
-              <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-1.5">
-                  <span class="rounded-circle" style="width: 7px; height: 7px; background-color: #fb923c;"></span>
-                  <span class="vendor-name-text">Whirlpool Corp.</span>
-                </div>
-                <span class="font-mono text-muted" style="font-size: 0.75rem;">₹9,80,000 <small class="ms-1">16.3%</small></span>
-              </div>
-
-              <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-1.5">
-                  <span class="rounded-circle" style="width: 7px; height: 7px; background-color: #fdba74;"></span>
-                  <span class="vendor-name-text">Bosch Home Appliances</span>
-                </div>
-                <span class="font-mono text-muted" style="font-size: 0.75rem;">₹7,50,000 <small class="ms-1">12.5%</small></span>
-              </div>
-
-              <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-1.5">
-                  <span class="rounded-circle" style="width: 7px; height: 7px; background-color: #fed7aa;"></span>
-                  <span class="vendor-name-text">Sony India Pvt. Ltd.</span>
-                </div>
-                <span class="font-mono text-muted" style="font-size: 0.75rem;">₹6,40,000 <small class="ms-1">10.7%</small></span>
-              </div>
-
-              <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-1.5">
-                  <span class="rounded-circle" style="width: 7px; height: 7px; background-color: #ffedd5;"></span>
-                  <span class="vendor-name-text">Others</span>
-                </div>
-                <span class="font-mono text-muted" style="font-size: 0.75rem;">₹8,30,000 <small class="ms-1">13.7%</small></span>
-              </div>
+              {% endfor %}
+              {% else %}
+              <div class="text-muted small text-center py-3">No payments in this period.</div>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -248,52 +219,42 @@
             </tr>
           </thead>
           <tbody>
+            {% for p in recent_purchases %}
             <tr>
-              <td class="fw-bold font-mono text-dark">PO-2025-0243</td>
-              <td class="vendor-name-text">Samsung India Pvt. Ltd.</td>
-              <td class="text-muted small">May 14, 2025</td>
-              <td class="fw-bold font-mono text-dark">₹2,45,000</td>
-              <td><span class="badge-status-approved">Approved</span></td>
+              <td>
+                <a href="{{ url_for('main.view_purchase', purchase_id=p.id) }}" class="fw-bold font-mono text-decoration-none" style="color: #ff6b1a;">{{ p.purchase_id }}</a>
+              </td>
+              <td class="vendor-name-text">{{ p.vendor.vendor_name if p.vendor else 'Unlinked' }}</td>
+              <td class="text-muted small">{{ p.purchase_date.strftime('%d %b %Y') }}</td>
+              <td class="fw-bold font-mono text-dark">₹{{ "{:,.0f}".format(p.total_amount) }}</td>
+              <td>
+                {% set pstatus = p.status or 'Approved' %}
+                {% if pstatus == 'Approved' %}
+                <span class="badge-status-approved">Approved</span>
+                {% elif pstatus == 'Pending' %}
+                <span class="badge-status-pending">Pending</span>
+                {% elif pstatus == 'Delivered' %}
+                <span class="badge-status-delivered">Delivered</span>
+                {% elif pstatus == 'Draft' %}
+                <span class="badge" style="background-color: #f1f5f9; color: #475569; font-weight: 700; padding: 0.28em 0.8em; border-radius: 999px; font-size: 0.72rem;">Draft</span>
+                {% else %}
+                <span class="badge" style="background-color: #fee2e2; color: #b91c1c; font-weight: 700; padding: 0.28em 0.8em; border-radius: 999px; font-size: 0.72rem;">{{ pstatus }}</span>
+                {% endif %}
+              </td>
             </tr>
+            {% else %}
             <tr>
-              <td class="fw-bold font-mono text-dark">PO-2025-0242</td>
-              <td class="vendor-name-text">LG Electronics</td>
-              <td class="text-muted small">May 13, 2025</td>
-              <td class="fw-bold font-mono text-dark">₹1,85,000</td>
-              <td><span class="badge-status-pending">Pending</span></td>
+              <td colspan="5" class="text-center text-muted small py-4">No purchases in this period.</td>
             </tr>
-            <tr>
-              <td class="fw-bold font-mono text-dark">PO-2025-0241</td>
-              <td class="vendor-name-text">Whirlpool Corp.</td>
-              <td class="text-muted small">May 12, 2025</td>
-              <td class="fw-bold font-mono text-dark">₹3,20,000</td>
-              <td><span class="badge-status-delivered">Delivered</span></td>
-            </tr>
-            <tr>
-              <td class="fw-bold font-mono text-dark">PO-2025-0240</td>
-              <td class="vendor-name-text">Bosch Home Appliances</td>
-              <td class="text-muted small">May 11, 2025</td>
-              <td class="fw-bold font-mono text-dark">₹1,10,000</td>
-              <td><span class="badge-status-approved">Approved</span></td>
-            </tr>
-            <tr>
-              <td class="fw-bold font-mono text-dark">PO-2025-0239</td>
-              <td class="vendor-name-text">Sony India Pvt. Ltd.</td>
-              <td class="text-muted small">May 10, 2025</td>
-              <td class="fw-bold font-mono text-dark">₹2,15,000</td>
-              <td><span class="badge-status-delivered">Delivered</span></td>
-            </tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
       <div class="card-table-footer-fixed" style="font-size: 0.75rem;">
-        <div class="text-muted">Showing 1 to 5 of 10 entries</div>
-        <div class="d-flex align-items-center gap-1">
-          <button class="btn btn-sm btn-light border p-0 px-2" style="font-size: 0.72rem;" disabled>&lt;</button>
-          <button class="btn btn-sm btn-orange-primary p-0 px-2" style="font-size: 0.72rem;">1</button>
-          <button class="btn btn-sm btn-light border p-0 px-2" style="font-size: 0.72rem;">2</button>
-          <button class="btn btn-sm btn-light border p-0 px-2" style="font-size: 0.72rem;">&gt;</button>
+        <div class="text-muted">
+          {% if recent_purchases_total %}Showing 1 to {{ [recent_purchases|length, recent_purchases_total]|min }} of {{ recent_purchases_total }} entries{% else %}No entries found{% endif %}
         </div>
+        <div class="text-muted">{{ time_filter_label }}{% if selected_vendor %} · {{ selected_vendor.vendor_name }}{% endif %}</div>
       </div>
     </div>
   </div>
@@ -317,52 +278,27 @@
             </tr>
           </thead>
           <tbody>
+            {% for pmt in recent_payments %}
             <tr>
-              <td class="fw-bold font-mono text-dark">PAY-2025-0187</td>
-              <td class="vendor-name-text">LG Electronics</td>
-              <td class="text-muted small">May 14, 2025</td>
-              <td class="fw-bold font-mono text-dark">₹1,85,000</td>
-              <td class="fw-semibold text-secondary small">NEFT</td>
+              <td class="fw-bold font-mono text-dark">{% if pmt.reference_number %}{{ pmt.reference_number }}{% else %}PAY-{{ '%04d'|format(pmt.id) }}{% endif %}</td>
+              <td class="vendor-name-text">{{ pmt.vendor.vendor_name if pmt.vendor else 'Unlinked' }}</td>
+              <td class="text-muted small">{{ pmt.payment_date.strftime('%d %b %Y') }}</td>
+              <td class="fw-bold font-mono text-dark">₹{{ "{:,.0f}".format(pmt.amount_paid) }}</td>
+              <td class="fw-semibold text-secondary small">{{ pmt.payment_method }}</td>
             </tr>
+            {% else %}
             <tr>
-              <td class="fw-bold font-mono text-dark">PAY-2025-0186</td>
-              <td class="vendor-name-text">Samsung India Pvt. Ltd.</td>
-              <td class="text-muted small">May 13, 2025</td>
-              <td class="fw-bold font-mono text-dark">₹2,45,000</td>
-              <td class="fw-semibold text-secondary small">NEFT</td>
+              <td colspan="5" class="text-center text-muted small py-4">No payments in this period.</td>
             </tr>
-            <tr>
-              <td class="fw-bold font-mono text-dark">PAY-2025-0185</td>
-              <td class="vendor-name-text">Whirlpool Corp.</td>
-              <td class="text-muted small">May 12, 2025</td>
-              <td class="fw-bold font-mono text-dark">₹1,20,000</td>
-              <td class="fw-semibold text-secondary small">UPI</td>
-            </tr>
-            <tr>
-              <td class="fw-bold font-mono text-dark">PAY-2025-0184</td>
-              <td class="vendor-name-text">Bosch Home Appliances</td>
-              <td class="text-muted small">May 11, 2025</td>
-              <td class="fw-bold font-mono text-dark">₹1,10,000</td>
-              <td class="fw-semibold text-secondary small">NEFT</td>
-            </tr>
-            <tr>
-              <td class="fw-bold font-mono text-dark">PAY-2025-0183</td>
-              <td class="vendor-name-text">Sony India Pvt. Ltd.</td>
-              <td class="text-muted small">May 10, 2025</td>
-              <td class="fw-bold font-mono text-dark">₹95,000</td>
-              <td class="fw-semibold text-secondary small">NEFT</td>
-            </tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
       <div class="card-table-footer-fixed" style="font-size: 0.75rem;">
-        <div class="text-muted">Showing 1 to 5 of 12 entries</div>
-        <div class="d-flex align-items-center gap-1">
-          <button class="btn btn-sm btn-light border p-0 px-2" style="font-size: 0.72rem;" disabled>&lt;</button>
-          <button class="btn btn-sm btn-orange-primary p-0 px-2" style="font-size: 0.72rem;">1</button>
-          <button class="btn btn-sm btn-light border p-0 px-2" style="font-size: 0.72rem;">2</button>
-          <button class="btn btn-sm btn-light border p-0 px-2" style="font-size: 0.72rem;">&gt;</button>
+        <div class="text-muted">
+          {% if recent_payments_total %}Showing 1 to {{ [recent_payments|length, recent_payments_total]|min }} of {{ recent_payments_total }} entries{% else %}No entries found{% endif %}
         </div>
+        <div class="text-muted">{{ time_filter_label }}{% if selected_vendor %} · {{ selected_vendor.vendor_name }}{% endif %}</div>
       </div>
     </div>
   </div>
@@ -370,14 +306,20 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    const purchaseLabels = {{ purchase_chart_labels | tojson }};
+    const purchaseValues = {{ purchase_chart_values | tojson }};
+    const paymentLabels = {{ payment_chart_labels | tojson }};
+    const paymentValues = {{ payment_chart_values | tojson }};
+    const donutPalette = ['#ff6b1a', '#f97316', '#fb923c', '#fdba74', '#fed7aa', '#ffedd5'];
+
     // Purchases by Vendor Bar Chart
     const ctxBar = document.getElementById('purchasesByVendorChart').getContext('2d');
     new Chart(ctxBar, {
         type: 'bar',
         data: {
-            labels: ['Samsung India', 'LG Electronics', 'Whirlpool', 'Bosch Home', 'Sony India', 'Others'],
+            labels: purchaseLabels,
             datasets: [{
-                data: [92500, 84000, 63000, 48500, 37500, 162030],
+                data: purchaseValues,
                 backgroundColor: '#ff6b1a',
                 borderRadius: 5,
                 barThickness: 24
@@ -420,10 +362,10 @@ document.addEventListener("DOMContentLoaded", function() {
     new Chart(ctxDonut, {
         type: 'doughnut',
         data: {
-            labels: ['Samsung India', 'LG Electronics', 'Whirlpool', 'Bosch Home', 'Sony India', 'Others'],
+            labels: paymentLabels,
             datasets: [{
-                data: [1650000, 1160000, 980000, 750000, 640000, 830000],
-                backgroundColor: ['#ff6b1a', '#f97316', '#fb923c', '#fdba74', '#fed7aa', '#ffedd5'],
+                data: paymentValues,
+                backgroundColor: Array.from({ length: paymentValues.length }, (_, i) => donutPalette[i % donutPalette.length]),
                 borderWidth: 2,
                 borderColor: '#ffffff'
             }]
@@ -435,6 +377,10 @@ document.addEventListener("DOMContentLoaded", function() {
             plugins: { legend: { display: false } }
         }
     });
+    setupChartEnlarge('purchasesByVendorChart', 'Purchases by Vendor');
+    setupChartEnlarge('paymentsDonutChart', 'Payments by Vendor');
 });
 </script>
+
+{% include '_chart_enlarge_modal.html' %}
 {% endblock %}

@@ -3,49 +3,79 @@
 {% block page_title %}Record Goods Received Note (GRN){% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <div class="form-page-card">
-            <h2 class="form-page-title mb-4">New Goods Received Note</h2>
+<div class="form-page-wrapper">
 
-            <form method="POST" action="{{ url_for('main.add_grn') }}">
-                <div class="mb-3">
-                    <label class="form-label-custom">Link Purchase Order <span class="text-danger">*</span></label>
-                    <select name="purchase_id" class="form-select-custom" required>
-                        <option value="">-- Select PO Code --</option>
-                        {% for p in purchases %}
-                        <option value="{{ p.id }}">{{ p.purchase_id }} — {{ p.vendor.vendor_name if p.vendor else 'Unlinked' }} ({{ p.brand_name or '' }} {{ p.model_name or '' }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label-custom">Received Date</label>
-                        <input type="date" name="received_date" class="form-control-custom" value="{{ today_date }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label-custom">Quantity Received <span class="text-danger">*</span></label>
-                        <input type="number" name="received_qty" class="form-control-custom" min="1" value="1" required>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label-custom">Received By (Staff Name)</label>
-                    <input type="text" name="received_by" class="form-control-custom" value="{{ current_user.name }}">
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label-custom">Condition / Inspection Notes</label>
-                    <textarea name="condition_notes" class="form-control-custom" rows="3" placeholder="e.g. All boxes intact, tested and functioning..."></textarea>
-                </div>
-
-                <div class="d-flex justify-content-between align-items-center pt-2">
-                    <a href="{{ url_for('main.grn_list') }}" class="btn btn-outline-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-orange-primary">Save GRN Record</button>
-                </div>
-            </form>
-        </div>
+  <!-- Page Header -->
+  <div class="form-page-header">
+    <div>
+      <h1 class="form-page-title">Record Goods Received</h1>
+      <p class="form-page-subtitle">Log the incoming delivery against an approved purchase order and update stock levels.</p>
     </div>
+    <a href="{{ url_for('main.grn_list') }}" class="btn-form-cancel">← Back to Goods Received</a>
+  </div>
+
+  <form method="POST" action="{{ url_for('main.add_grn') }}">
+
+    <div class="form-grid">
+      <!-- SECTION 1: Purchase Order Link -->
+      <div class="form-page-card">
+        <div class="form-section-header">
+          <p class="form-section-title">Purchase Order Link</p>
+        </div>
+        <div class="form-section-body">
+          <label class="form-label">Select Purchase Order <span class="req">*</span></label>
+          <select name="purchase_id" class="form-select" required>
+            <option value="">-- Select PO Code --</option>
+            {% for p in purchases %}
+            <option value="{{ p.id }}">{{ p.purchase_id }} — {{ p.vendor.vendor_name if p.vendor else 'Unlinked' }} ({{ p.brand_name or '' }} {{ p.model_name or '' }})</option>
+            {% endfor %}
+          </select>
+          <div class="form-text">Only approved purchase orders can receive goods. The GRN is linked to this invoice.</div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: Receipt Details -->
+      <div class="form-page-card">
+        <div class="form-section-header">
+          <p class="form-section-title">Receipt Details</p>
+        </div>
+        <div class="form-section-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Received Date</label>
+              <input type="date" name="received_date" class="form-control font-mono" value="{{ today_date }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Quantity Received <span class="req">*</span></label>
+              <input type="number" name="received_qty" class="form-control font-mono" min="1" value="1" required>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Received By (Staff Name)</label>
+              <input type="text" name="received_by" class="form-control" value="{{ current_user.name }}" placeholder="e.g. Ravi Kumar">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: Inspection -->
+      <div class="form-page-card form-grid-full">
+        <div class="form-section-header">
+          <p class="form-section-title">Inspection & Condition</p>
+        </div>
+        <div class="form-section-body">
+          <label class="form-label">Condition / Inspection Notes</label>
+          <textarea name="condition_notes" class="form-control" rows="2" placeholder="e.g. All boxes intact, sealed and functioning..."></textarea>
+          <div class="form-text">Record damage, missing items, or packaging issues found during inspection.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="form-action-bar form-page-card mt-3" style="border-radius: 16px;">
+      <a href="{{ url_for('main.grn_list') }}" class="btn-form-cancel">Cancel</a>
+      <button type="submit" class="btn-form-primary">Save GRN Record</button>
+    </div>
+  </form>
+
 </div>
 {% endblock %}

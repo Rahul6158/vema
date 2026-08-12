@@ -89,9 +89,9 @@
   </div>
 </div>
 
-<!-- Top Vendor Volume Ranking Table & Chart -->
+<!-- Top Vendor Volume Ranking Table -->
 <div class="row g-4 mb-4">
-  <div class="col-lg-7">
+  <div class="col-12">
     <div class="card-clean h-100">
       <div class="card-header-clean">
         <h5 class="mb-0 fw-bold">Vendor Volume Ranking</h5>
@@ -140,41 +140,30 @@
       </div>
     </div>
   </div>
+</div>
 
-  <div class="col-lg-5">
-    <div class="card-clean h-100">
+<!-- Monthly Cumulative Comparison Chart -->
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="card-clean">
       <div class="card-header-clean">
         <h5 class="mb-0 fw-bold">Monthly Cumulative Comparison</h5>
         <div class="d-flex align-items-center gap-2">
           <span class="badge" style="background-color: #f4f4ff; color: #7c3aed; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">{{ monthly_data|length }} months</span>
-          <button type="button" class="btn-icon-action" title="Enlarge Graph" data-bs-toggle="modal" data-bs-target="#analyticsChartModal">
+          <button type="button" class="btn-icon-action" data-enlarge="overallAnalyticsChart" title="Enlarge Graph" data-bs-toggle="modal" data-bs-target="#chartEnlargeModal">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
           </button>
         </div>
       </div>
-      <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 300px;">
-        <canvas id="overallAnalyticsChart" height="260"></canvas>
+      <div class="card-body" style="position: relative; height: 360px;">
+        <canvas id="overallAnalyticsChart"></canvas>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Enlarged Graph Modal -->
-<div class="modal fade" id="analyticsChartModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content" style="border-radius: 14px; overflow: hidden;">
-      <div class="modal-header" style="border-bottom: 1px solid #f1f5f9; padding: 0.9rem 1.25rem;">
-        <h5 class="modal-title fw-bold" style="font-size: 0.95rem;">Monthly Cumulative Comparison</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-3">
-        <div style="position: relative; height: 70vh;">
-          <canvas id="analyticsChartModalCanvas"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+{% include '_chart_enlarge_modal.html' %}
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -221,40 +210,8 @@ document.addEventListener("DOMContentLoaded", function() {
         options: chartOptions
     });
 
-    let enlargeChart = null;
-    const modalEl = document.getElementById('analyticsChartModal');
-    modalEl.addEventListener('shown.bs.modal', function() {
-        enlargeChart = new Chart(document.getElementById('analyticsChartModalCanvas'), {
-            type: 'bar',
-            data: chartData,
-            options: chartOptions
-        });
-    });
-    modalEl.addEventListener('hidden.bs.modal', function() {
-        if (enlargeChart) {
-            enlargeChart.destroy();
-            enlargeChart = null;
-        }
-    });
+    setupChartEnlarge('overallAnalyticsChart', 'Monthly Cumulative Comparison');
 });
 </script>
 
-<style>
-.btn-icon-action {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid #e2e8f0;
-  background-color: #ffffff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-}
-.btn-icon-action:hover {
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
-  transform: translateY(-1px);
-}
-</style>
 {% endblock %}

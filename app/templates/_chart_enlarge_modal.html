@@ -1,0 +1,46 @@
+<!-- ============ Shared Chart Enlarge Modal (blurred backdrop) ============ -->
+<div class="modal fade" id="chartEnlargeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 14px; overflow: hidden;">
+      <div class="modal-header" style="border-bottom: 1px solid #f1f5f9; padding: 0.9rem 1.25rem;">
+        <h5 class="modal-title fw-bold" id="chartEnlargeTitle" style="font-size: 0.95rem;">Chart</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3">
+        <div style="position: relative; height: 70vh;">
+          <canvas id="chartEnlargeCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function setupChartEnlarge(sourceId, title) {
+  const btn = document.querySelector('[data-enlarge="' + sourceId + '"]');
+  const modalEl = document.getElementById('chartEnlargeModal');
+  const titleEl = document.getElementById('chartEnlargeTitle');
+  const canvas = document.getElementById('chartEnlargeCanvas');
+  if (!btn || !modalEl || !canvas) return;
+  let enlarged = null;
+  modalEl.addEventListener('shown.bs.modal', function () {
+    const src = Chart.getChart(sourceId);
+    if (!src) return;
+    titleEl.textContent = title || 'Chart';
+    enlarged = new Chart(canvas, {
+      type: src.config.type,
+      data: src.config.data,
+      options: Object.assign({}, src.config.options || {}, {
+        responsive: true,
+        maintainAspectRatio: false
+      })
+    });
+  });
+  modalEl.addEventListener('hidden.bs.modal', function () {
+    if (enlarged) {
+      enlarged.destroy();
+      enlarged = null;
+    }
+  });
+}
+</script>

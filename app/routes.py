@@ -7,7 +7,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from .models import (Vendor, Payment, Purchase, Customer, Product, Role, User,
                      Category, Brand, StoreSetting, Offer, OfferMessage, Warranty,
-                     PurchaseItem, WhatsAppMessage)
+                     PurchaseItem, GoodsReceived, WhatsAppMessage)
 from .storage import storage
 from .utils import role_required
 
@@ -87,11 +87,16 @@ def dashboard():
     all_purchases = storage.purchases
     all_payments = storage.payments
 
-    # Financial KPIs across CRM
-    total_purchases_val = sum(p.total_amount for p in all_purchases)
-    total_payments_val = sum(p.amount_paid for p in all_payments)
-    total_outstanding = total_purchases_val - total_payments_val
-    total_vendors_count = len(vendors)
+    # Scoping helpers: apply vendor + time filters to purchases/payments
+    def scope_purchases(items, start, end):
+        return [p for p in items
+                if (not selected_vendor_id or p.vendor_id == selected_vendor_id)
+                and start <= (p.purchase_date or p.created_at.date()) <= end]
+
+    def scope_payments(items, start, end):
+        return [p for p in items
+                if (not selected_vendor_id or p.vendor_id == selected_vendor_id)
+                and start <= (p.payment_date or p.created_at.date()) <= end]
 
     # Date Range Calculation
     today = date.today()
@@ -153,49 +158,69 @@ def dashboard():
 
     selected_vendor = storage.get_vendor(selected_vendor_id) if selected_vendor_id else None
 
-    # Current period totals
-    cur_purchases = sum(p.total_amount for p in all_purchases
-                        if filter_start <= (p.purchase_date or p.created_at.date()) <= filter_end)
-    cur_payments = sum(p.amount_paid for p in all_payments
-                       if filter_start <= (p.payment_date or p.created_at.date()) <= filter_end)
+    # Scope-aware current/previous period transactions
+    cur_purchases = scope_purchases(all_purchases, filter_start, filter_end)
+    cur_payments = scope_payments(all_payments, filter_start, filter_end)
+    prev_purchases = scope_purchases(all_purchases, prev_start, prev_end)
+    prev_payments = scope_payments(all_payments, prev_start, prev_end)
 
-    # Previous period totals for % change
-    prev_purchases = sum(p.total_amount for p in all_purchases
-                         if prev_start <= (p.purchase_date or p.created_at.date()) <= prev_end)
-    prev_payments = sum(p.amount_paid for p in all_payments
-                        if prev_start <= (p.payment_date or p.created_at.date()) <= prev_end)
+    cur_purchases_val = sum(p.total_amount for p in cur_purchases)
+    cur_payments_val = sum(p.amount_paid for p in cur_payments)
+    prev_purchases_val = sum(p.total_amount for p in prev_purchases)
+    prev_payments_val = sum(p.amount_paid for p in prev_payments)
 
     def pct_change(cur, prev):
         if prev == 0:
             return 100.0 if cur > 0 else 0.0
         return ((cur - prev) / prev) * 100
 
-    purchases_pct_change = pct_change(cur_purchases, prev_purchases)
-    payments_pct_change = pct_change(cur_payments, prev_payments)
-    outstanding_change = cur_purchases - cur_payments  # positive = more bought than paid this period
+    # KPI values now reflect the active vendor + time scope
+    total_purchases_val = cur_purchases_val
+    total_payments_val = cur_payments_val
+    total_outstanding = cur_purchases_val - cur_payments_val
+    total_vendors_count = len(vendors)
+
+    purchases_pct_change = pct_change(cur_purchases_val, prev_purchases_val)
+    payments_pct_change = pct_change(cur_payments_val, prev_payments_val)
+    outstanding_change = cur_purchases_val - cur_payments_val  # positive = more bought than paid this period
 
     # Vendors added this calendar month
     this_month_start = date(today.year, today.month, 1)
     vendors_added_this_month = sum(1 for v in vendors if v.created_at and v.created_at.date() >= this_month_start)
 
-    # Vendor Comparison analytics
-    vendor_purchase_comparison = []
-    vendor_payment_comparison = []
+    # Vendor Comparison analytics (time-scoped; vendor filter narrows to that vendor)
     target_vendors = [selected_vendor] if selected_vendor else vendors
-
+    comparison = []
     for v in target_vendors:
         v_purchases = sum(p.total_amount for p in v.purchases if filter_start <= (p.purchase_date or p.created_at.date()) <= filter_end)
         v_payments = sum(p.amount_paid for p in v.payments if filter_start <= (p.payment_date or p.created_at.date()) <= filter_end)
-        vendor_purchase_comparison.append({'vendor': v.vendor_name, 'amount': v_purchases})
-        vendor_payment_comparison.append({'vendor': v.vendor_name, 'amount': v_payments})
+        comparison.append({'vendor': v.vendor_name, 'purchases': v_purchases, 'payments': v_payments})
+    comparison.sort(key=lambda c: c['purchases'], reverse=True)
 
-    # Recent Records
-    if selected_vendor:
-        recent_purchases = sorted(selected_vendor.purchases, key=lambda p: p.purchase_date or p.created_at.date(), reverse=True)[:5]
-        recent_payments = sorted(selected_vendor.payments, key=lambda p: p.payment_date or p.created_at.date(), reverse=True)[:5]
+    def short_name(name):
+        parts = name.split()
+        return ' '.join(parts[:2]) if parts else name
+
+    purchase_chart_labels = [short_name(c['vendor']) for c in comparison]
+    purchase_chart_values = [c['purchases'] for c in comparison]
+
+    payment_ranked = sorted(comparison, key=lambda c: c['payments'], reverse=True)
+    payment_chart_labels = [short_name(c['vendor']) for c in payment_ranked]
+    payment_chart_values = [c['payments'] for c in payment_ranked]
+    payment_chart_items = [{'name': c['vendor'], 'value': c['payments']} for c in payment_ranked]
+    payments_total = sum(payment_chart_values)
+
+    # Recent records in scope (time + vendor), newest first
+    recent_purchases = sorted(cur_purchases, key=lambda p: p.purchase_date or p.created_at.date(), reverse=True)[:5]
+    recent_payments = sorted(cur_payments, key=lambda p: p.payment_date or p.created_at.date(), reverse=True)[:5]
+
+    if time_filter == 'custom' and start_date_param and end_date_param:
+        time_filter_label = 'Custom Range'
     else:
-        recent_purchases = sorted(all_purchases, key=lambda p: p.purchase_date or p.created_at.date(), reverse=True)[:5]
-        recent_payments = sorted(all_payments, key=lambda p: p.payment_date or p.created_at.date(), reverse=True)[:5]
+        time_filter_label = {
+            'day': 'Today', 'week': 'This Week', 'month': 'This Month',
+            'quarter': 'This Quarter', 'year': 'This Year'
+        }.get(time_filter, 'This Month')
 
     return render_template(
         'dashboard.html',
@@ -203,6 +228,7 @@ def dashboard():
         selected_vendor=selected_vendor,
         selected_vendor_id=selected_vendor_id,
         time_filter=time_filter,
+        time_filter_label=time_filter_label,
         start_date=start_date_param,
         end_date=end_date_param,
         total_purchases_val=total_purchases_val,
@@ -213,10 +239,16 @@ def dashboard():
         purchases_pct_change=purchases_pct_change,
         payments_pct_change=payments_pct_change,
         outstanding_change=outstanding_change,
-        vendor_purchase_comparison=vendor_purchase_comparison,
-        vendor_payment_comparison=vendor_payment_comparison,
+        purchase_chart_labels=purchase_chart_labels,
+        purchase_chart_values=purchase_chart_values,
+        payment_chart_labels=payment_chart_labels,
+        payment_chart_values=payment_chart_values,
+        payment_chart_items=payment_chart_items,
+        payments_total=payments_total,
         recent_purchases=recent_purchases,
-        recent_payments=recent_payments
+        recent_payments=recent_payments,
+        recent_purchases_total=len(cur_purchases),
+        recent_payments_total=len(cur_payments)
     )
 
 
@@ -366,6 +398,22 @@ def vendor_detail(vendor_id):
     total_paid = vendor.total_paid
     settlement_pct = round((total_paid / total_invoiced * 100) if total_invoiced else 0, 1)
 
+    # Aging info for this vendor (oldest unpaid purchase)
+    today = date.today()
+    days_overdue = 0
+    aging_bucket = None
+    if vendor.outstanding_balance > 0:
+        oldest_unpaid = sorted(vendor.purchases, key=lambda p: p.purchase_date or today)[0] if vendor.purchases else None
+        oldest_unpaid_date = oldest_unpaid.purchase_date if oldest_unpaid else today
+        days_overdue = (today - oldest_unpaid_date).days if oldest_unpaid_date else 0
+        aging_bucket = "0-30 Days"
+        if days_overdue > 90:
+            aging_bucket = "90+ Days"
+        elif days_overdue > 60:
+            aging_bucket = "61-90 Days"
+        elif days_overdue > 30:
+            aging_bucket = "31-60 Days"
+
     return render_template(
         'vendor_detail.html',
         vendor=vendor,
@@ -375,7 +423,9 @@ def vendor_detail(vendor_id):
         payment_method_data=payment_method_data,
         total_invoiced=total_invoiced,
         total_paid=total_paid,
-        settlement_pct=settlement_pct
+        settlement_pct=settlement_pct,
+        days_overdue=days_overdue,
+        aging_bucket=aging_bucket
     )
 
 
@@ -1434,7 +1484,20 @@ def reports_aging():
             })
 
     aging_data.sort(key=lambda x: x['days_overdue'], reverse=True)
-    return render_template('reports_aging.html', aging_data=aging_data)
+
+    aging_total = sum(item['outstanding'] for item in aging_data)
+    aging_buckets = {
+        '0-30 Days': [0, 0.0],
+        '31-60 Days': [0, 0.0],
+        '61-90 Days': [0, 0.0],
+        '90+ Days': [0, 0.0],
+    }
+    for item in aging_data:
+        aging_buckets[item['bucket']][0] += 1
+        aging_buckets[item['bucket']][1] += item['outstanding']
+
+    return render_template('reports_aging.html', aging_data=aging_data,
+                           aging_buckets=aging_buckets, aging_total=aging_total)
 
 
 @main_bp.route('/admin/backup')

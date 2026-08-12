@@ -177,7 +177,14 @@
       <div class="p-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="mb-0 fw-bold" style="font-size: 0.82rem;">Purchase Trend</h6>
-          <span class="badge font-mono" style="background-color: #fff7ed; color: #ea580c; font-weight: 700; font-size: 0.68rem;">₹{{ "{:,.0f}".format(total_purchase_val) }}</span>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge font-mono" style="background-color: #fff7ed; color: #ea580c; font-weight: 700; font-size: 0.68rem;">₹{{ "{:,.0f}".format(total_purchase_val) }}</span>
+            {% if purchase_chart_labels %}
+            <button type="button" class="btn-icon-action" data-enlarge="purchaseTrendChart" title="Enlarge Graph" data-bs-toggle="modal" data-bs-target="#chartEnlargeModal">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+            {% endif %}
+          </div>
         </div>
         <p class="text-muted small mb-3" style="font-size: 0.72rem;">Daily purchase value in the selected period.</p>
         {% if purchase_chart_labels %}
@@ -251,7 +258,14 @@
       <div class="p-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="mb-0 fw-bold" style="font-size: 0.82rem;">Payments by Method</h6>
-          <span class="badge font-mono" style="background-color: #f0fdf4; color: #15803d; font-weight: 700; font-size: 0.68rem;">₹{{ "{:,.0f}".format(total_payment_val) }}</span>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge font-mono" style="background-color: #f0fdf4; color: #15803d; font-weight: 700; font-size: 0.68rem;">₹{{ "{:,.0f}".format(total_payment_val) }}</span>
+            {% if method_chart_labels %}
+            <button type="button" class="btn-icon-action" data-enlarge="paymentMethodChart" title="Enlarge Graph" data-bs-toggle="modal" data-bs-target="#chartEnlargeModal">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+            {% endif %}
+          </div>
         </div>
         <p class="text-muted small mb-3" style="font-size: 0.72rem;">Share of total paid grouped by payment method.</p>
         {% if method_chart_labels %}
@@ -316,7 +330,14 @@
       <div class="p-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="mb-0 fw-bold" style="font-size: 0.82rem;">Top Vendors by Purchases</h6>
-          <span class="badge font-mono" style="background-color: #f4f4ff; color: #7c3aed; font-weight: 700; font-size: 0.68rem;">Top {{ vendor_chart_labels|length }}</span>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge font-mono" style="background-color: #f4f4ff; color: #7c3aed; font-weight: 700; font-size: 0.68rem;">Top {{ vendor_chart_labels|length }}</span>
+            {% if vendor_chart_labels %}
+            <button type="button" class="btn-icon-action" data-enlarge="vendorChart" title="Enlarge Graph" data-bs-toggle="modal" data-bs-target="#chartEnlargeModal">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+            {% endif %}
+          </div>
         </div>
         <p class="text-muted small mb-3" style="font-size: 0.72rem;">All-time purchase value of your largest vendors.</p>
         {% if vendor_chart_labels %}
@@ -425,6 +446,11 @@
       }
     });
   }
+  setupChartEnlarge('purchaseTrendChart', 'Purchase Trend');
+  setupChartEnlarge('paymentMethodChart', 'Payments by Method');
+  setupChartEnlarge('vendorChart', 'Top Vendors by Purchases');
 })();
 </script>
+
+{% include '_chart_enlarge_modal.html' %}
 {% endblock %}

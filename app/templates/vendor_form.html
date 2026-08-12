@@ -14,123 +14,126 @@
   </div>
 
   <form method="POST">
-    <!-- SECTION 1: Basic Information -->
-    <div class="form-page-card mb-3">
-      <div class="form-section-header">
-        <p class="form-section-title">🏢 Company Information</p>
-      </div>
-      <div class="form-section-body">
-        <div class="row g-3">
-          <div class="col-md-8">
-            <label class="form-label">Vendor / Company Name <span class="req">*</span></label>
-            <input type="text" name="vendor_name" class="form-control" placeholder="e.g. Bajaj Electronics Wholesale"
-                   value="{{ vendor.vendor_name if vendor else '' }}" required>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Vendor Type</label>
-            <select name="vendor_type" class="form-select">
-              {% set vtype = vendor.vendor_type if vendor and vendor.vendor_type else '' %}
-              <option value="" {% if not vtype %}selected{% endif %}>-- Select Type --</option>
-              <option value="Manufacturer" {% if vtype == 'Manufacturer' %}selected{% endif %}>Manufacturer</option>
-              <option value="Distributor" {% if vtype == 'Distributor' %}selected{% endif %}>Distributor</option>
-              <option value="Dealer" {% if vtype == 'Dealer' %}selected{% endif %}>Dealer</option>
-              <option value="Retailer" {% if vtype == 'Retailer' %}selected{% endif %}>Retailer</option>
-              <option value="Service Provider" {% if vtype == 'Service Provider' %}selected{% endif %}>Service Provider</option>
-              <option value="Other" {% if vtype == 'Other' %}selected{% endif %}>Other</option>
-            </select>
-          </div>
+    <div class="form-grid">
 
-          <div class="col-md-6">
-            <label class="form-label">Contact Person Name</label>
-            <input type="text" name="contact_person" class="form-control" placeholder="e.g. Suresh Mehta"
-                   value="{{ vendor.contact_person if vendor and vendor.contact_person else '' }}">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Phone No.</label>
-            <input type="text" name="phone" class="form-control font-mono" placeholder="+91 98765 43210"
-                   value="{{ vendor.phone if vendor else '' }}">
+      <!-- SECTION 1: Basic Information -->
+      <div class="form-page-card">
+        <div class="form-section-header">
+          <p class="form-section-title">Company Information</p>
+        </div>
+        <div class="form-section-body">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label">Vendor / Company Name <span class="req">*</span></label>
+              <input type="text" name="vendor_name" class="form-control" placeholder="e.g. Bajaj Electronics Wholesale"
+                     value="{{ vendor.vendor_name if vendor else '' }}" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Vendor Type</label>
+              <select name="vendor_type" class="form-select">
+                {% set vtype = vendor.vendor_type if vendor and vendor.vendor_type else '' %}
+                <option value="" {% if not vtype %}selected{% endif %}>-- Select Type --</option>
+                <option value="Manufacturer" {% if vtype == 'Manufacturer' %}selected{% endif %}>Manufacturer</option>
+                <option value="Distributor" {% if vtype == 'Distributor' %}selected{% endif %}>Distributor</option>
+                <option value="Dealer" {% if vtype == 'Dealer' %}selected{% endif %}>Dealer</option>
+                <option value="Retailer" {% if vtype == 'Retailer' %}selected{% endif %}>Retailer</option>
+                <option value="Service Provider" {% if vtype == 'Service Provider' %}selected{% endif %}>Service Provider</option>
+                <option value="Other" {% if vtype == 'Other' %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Contact Person Name</label>
+              <input type="text" name="contact_person" class="form-control" placeholder="e.g. Suresh Mehta"
+                     value="{{ vendor.contact_person if vendor and vendor.contact_person else '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Phone No.</label>
+              <input type="text" name="phone" class="form-control font-mono" placeholder="+91 98765 43210"
+                     value="{{ vendor.phone if vendor else '' }}">
+            </div>
           </div>
         </div>
       </div>
-
-      <hr class="form-section-divider">
 
       <!-- SECTION 2: Address -->
-      <div class="form-section-header">
-        <p class="form-section-title">📍 Location</p>
-      </div>
-      <div class="form-section-body">
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label">Town / City</label>
-            <input type="text" name="city" class="form-control" placeholder="e.g. Nashik"
-                   value="{{ vendor.city if vendor else '' }}">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">State</label>
-            <input type="text" name="state" class="form-control" placeholder="e.g. Maharashtra"
-                   value="{{ vendor.state if vendor else '' }}">
+      <div class="form-page-card">
+        <div class="form-section-header">
+          <p class="form-section-title">Location</p>
+        </div>
+        <div class="form-section-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Town / City</label>
+              <input type="text" name="city" class="form-control" placeholder="e.g. Nashik"
+                     value="{{ vendor.city if vendor else '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">State</label>
+              <input type="text" name="state" class="form-control" placeholder="e.g. Maharashtra"
+                     value="{{ vendor.state if vendor else '' }}">
+            </div>
           </div>
         </div>
       </div>
-
-      <hr class="form-section-divider">
 
       <!-- SECTION 3: Tax & Banking -->
-      <div class="form-section-header">
-        <p class="form-section-title">💳 Tax & Banking Details</p>
-      </div>
-      <div class="form-section-body">
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label">GST Number</label>
-            <input type="text" name="gst_number" class="form-control font-mono" placeholder="27AAAAA0000A1Z5"
-                   value="{{ vendor.gst_number if vendor and vendor.gst_number else '' }}">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">PAN Number</label>
-            <input type="text" name="pan_number" class="form-control font-mono" placeholder="ABCDE1234F"
-                   value="{{ vendor.pan_number if vendor and vendor.pan_number else '' }}">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Bank Account Number</label>
-            <input type="text" name="bank_account" class="form-control font-mono" placeholder="91802000000000"
-                   value="{{ vendor.bank_account if vendor and vendor.bank_account else '' }}">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">IFSC Code</label>
-            <input type="text" name="ifsc_code" class="form-control font-mono" placeholder="HDFC0001234"
-                   value="{{ vendor.ifsc_code if vendor and vendor.ifsc_code else '' }}">
+      <div class="form-page-card">
+        <div class="form-section-header">
+          <p class="form-section-title">Tax & Banking Details</p>
+        </div>
+        <div class="form-section-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">GST Number</label>
+              <input type="text" name="gst_number" class="form-control font-mono" placeholder="27AAAAA0000A1Z5"
+                     value="{{ vendor.gst_number if vendor and vendor.gst_number else '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">PAN Number</label>
+              <input type="text" name="pan_number" class="form-control font-mono" placeholder="ABCDE1234F"
+                     value="{{ vendor.pan_number if vendor and vendor.pan_number else '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Bank Account Number</label>
+              <input type="text" name="bank_account" class="form-control font-mono" placeholder="91802000000000"
+                     value="{{ vendor.bank_account if vendor and vendor.bank_account else '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">IFSC Code</label>
+              <input type="text" name="ifsc_code" class="form-control font-mono" placeholder="HDFC0001234"
+                     value="{{ vendor.ifsc_code if vendor and vendor.ifsc_code else '' }}">
+            </div>
           </div>
         </div>
       </div>
-
-      <hr class="form-section-divider">
 
       <!-- SECTION 4: Status -->
-      <div class="form-section-header">
-        <p class="form-section-title">⚙️ Account Status</p>
-      </div>
-
-      <div class="form-section-body">
-        <label class="form-label d-block mb-2">Vendor Status</label>
-        <div class="form-status-toggle" style="max-width: 320px;">
-          {% set vstatus = vendor.status if vendor and vendor.status else 'Active' %}
-          <label style="flex:1;">
-            <input type="radio" name="status" value="Active" {% if vstatus == 'Active' %}checked{% endif %}>
-            <div class="status-opt status-opt-active">✅ Active</div>
-          </label>
-          <label style="flex:1;">
-            <input type="radio" name="status" value="Inactive" {% if vstatus == 'Inactive' %}checked{% endif %}>
-            <div class="status-opt status-opt-inactive">⛔ Inactive</div>
-          </label>
+      <div class="form-page-card">
+        <div class="form-section-header">
+          <p class="form-section-title">Account Status</p>
         </div>
-        <div class="form-text mt-2">Active vendors appear in purchase order dropdowns.</div>
+
+        <div class="form-section-body">
+          <label class="form-label d-block mb-2">Vendor Status</label>
+          <div class="form-status-toggle" style="max-width: 320px;">
+            {% set vstatus = vendor.status if vendor and vendor.status else 'Active' %}
+            <label style="flex:1;">
+              <input type="radio" name="status" value="Active" {% if vstatus == 'Active' %}checked{% endif %}>
+              <div class="status-opt status-opt-active">Active</div>
+            </label>
+            <label style="flex:1;">
+              <input type="radio" name="status" value="Inactive" {% if vstatus == 'Inactive' %}checked{% endif %}>
+              <div class="status-opt status-opt-inactive">Inactive</div>
+            </label>
+          </div>
+          <div class="form-text mt-2">Active vendors appear in purchase order dropdowns.</div>
+        </div>
       </div>
     </div>
 
     <!-- Action Bar -->
-    <div class="form-action-bar form-page-card" style="border-radius: 16px;">
+    <div class="form-action-bar form-page-card mt-3" style="border-radius: 16px;">
       <a href="{{ url_for('main.vendors') }}" class="btn-form-cancel">Cancel</a>
       <button type="submit" class="btn-form-primary">
         {% if vendor %}Save Changes{% else %}Register Vendor{% endif %}
