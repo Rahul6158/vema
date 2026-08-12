@@ -1,86 +1,246 @@
-{% extends 'layout.html' %}
+{% extends "layout.html" %}
+
+{% block page_title %}User Management{% endblock %}
+{% block page_subtitle %}Manage CRM user access credentials, roles, and administrative permissions.{% endblock %}
+
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-    <div>
-        <h1 class="page-title mb-1">User Management</h1>
-        <p class="text-muted small mb-0">Manage CRM user access credentials, roles, and administrative permissions.</p>
+
+<!-- 5 Top Metric KPI Row -->
+<div class="row g-3 mb-4">
+  <!-- Card 1: TOTAL USERS (Orange Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-orange">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">TOTAL USERS</div>
+          <div class="kpi-value-num">{{ total_users }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">System accounts</div>
+        </div>
+      </div>
     </div>
-    <div>
-        <a href="{{ url_for('main.add_user') }}" class="btn btn-primary">+ Add New User</a>
+  </div>
+
+  <!-- Card 2: ACTIVE USERS (Green Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-green">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">ACTIVE USERS</div>
+          <div class="kpi-value-num">{{ active_users }}</div>
+          <div class="kpi-trend-green mt-1">Can log in</div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Card 3: ADMINS (Violet Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-violet">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">ADMINS</div>
+          <div class="kpi-value-num">{{ admin_count }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">Full access</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4: MANAGERS (Blue Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-blue">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">MANAGERS</div>
+          <div class="kpi-value-num">{{ manager_count }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">Elevated access</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 5: STAFF & OTHERS (Amber Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-amber">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">STAFF & OTHERS</div>
+          <div class="kpi-value-num">{{ staff_count }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">Limited access</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="card-title-text">System Users ({{ users|length }})</span>
-        <span class="badge badge-secondary">Access Control</span>
+<!-- Main Table Card with Search & Clean Inline Filters (Fixed Height Container) -->
+<div class="card-clean mb-4" style="min-height: 520px; display: flex; flex-direction: column; justify-content: space-between;">
+  <div class="p-3 border-bottom">
+    <form method="GET" action="{{ url_for('main.users') }}" class="row g-2 align-items-center">
+      <!-- 1. Search Box -->
+      <div class="col-xl-4 col-md-4">
+        <div class="header-search-box w-100" style="background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; height: 38px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" name="q" placeholder="Search name, email, phone..." value="{{ query }}">
+        </div>
+      </div>
+
+      <!-- 2. Role Select -->
+      <div class="col-xl-2 col-md-2">
+        <select name="role_id" class="filter-select-clean font-mono w-100" style="height: 38px;" onchange="this.form.submit()">
+          <option value="">Role: All</option>
+          {% for r in roles %}
+            <option value="{{ r.id }}" {% if role_filter == r.id %}selected{% endif %}>{{ r.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- 3. Action Buttons -->
+      <div class="col-xl-6 col-md-6 d-flex justify-content-end gap-2 ms-auto">
+        <button type="submit" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1 font-mono text-nowrap" style="height: 38px; border-radius: 8px; font-size: 0.78rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          <span>Filter</span>
+        </button>
+        <a href="{{ url_for('main.add_user') }}" class="btn btn-orange-primary text-nowrap d-inline-flex align-items-center gap-1" style="height: 38px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Add User</span>
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table table-clean table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Email Address</th>
+          <th>Phone</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold font-mono" style="width: 34px; height: 34px; background-color: #fff7ed; color: #ea580c; font-size: 0.75rem; border: 1px solid #fed7aa; flex-shrink: 0;">{{ u.name[:2].upper() if u.name else 'US' }}</div>
+              <div>
+                <div class="fw-semibold text-dark" style="font-size: 0.83rem;">{{ u.name }}</div>
+                <small class="text-muted font-mono" style="font-size: 0.68rem;">ID: #{{ u.id }}</small>
+              </div>
+            </div>
+          </td>
+          <td class="font-mono small text-muted">{{ u.email }}</td>
+          <td class="text-muted small">{{ u.phone or '—' }}</td>
+          <td>
+            {% if u.role and u.role.name == 'Admin' %}
+              <span class="badge" style="background-color: #fee2e2; color: #b91c1c; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">Admin</span>
+            {% elif u.role and u.role.name == 'Manager' %}
+              <span class="badge" style="background-color: #ffedd5; color: #c2410c; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">Manager</span>
+            {% elif u.role and u.role.name in ('Accountant', 'Staff') %}
+              <span class="badge" style="background-color: #dbeafe; color: #2563eb; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">{{ u.role.name }}</span>
+            {% else %}
+              <span class="badge" style="background-color: #f1f5f9; color: #475569; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">{{ u.role.name if u.role else 'Staff' }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.active %}
+              <span class="badge" style="background-color: #dcfce7; color: #15803d; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">
+                <span class="rounded-circle d-inline-block" style="width: 6px; height: 6px; background-color: #22c55e; margin-right: 4px;"></span>Active
+              </span>
+            {% else %}
+              <span class="badge" style="background-color: #f1f5f9; color: #64748b; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{{ url_for('main.edit_user', user_id=u.id) }}" class="btn btn-sm d-inline-flex align-items-center gap-1 text-nowrap" style="height: 32px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; background-color: #2563eb; border: 1px solid #2563eb; color: #ffffff;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <span>Edit</span>
+            </a>
+            {% if current_user.id != u.id %}
+            <form method="POST" action="{{ url_for('main.delete_user', user_id=u.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
+              <button type="submit" class="btn btn-sm d-inline-flex align-items-center gap-1 text-nowrap" style="height: 32px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; background-color: #dc2626; border: 1px solid #dc2626; color: #ffffff;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <span>Delete</span>
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center py-5 text-muted">
+            <div class="d-flex justify-content-center mb-2">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div>No users found in system.</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer Pagination (Fixed at Bottom) -->
+  <div class="card-table-footer-fixed" style="font-size: 0.78rem;">
+    <div class="text-muted">
+      {% if total_items %}
+        Showing {{ start_idx }} to {{ end_idx }} of {{ total_items }} entries
+      {% else %}
+        No entries found
+      {% endif %}
     </div>
-    <div class="table-responsive">
-        <table class="table align-middle mb-0">
-            <thead>
-                <tr>
-                    <th>User</th>
-                    <th>Email Address</th>
-                    <th>Phone</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in users %}
-                <tr>
-                    <td>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center fw-bold text-primary" style="width: 38px; height: 38px; font-size: 0.85rem; background: #fff7ed !important; border-color: rgba(234, 88, 12, 0.2) !important;">
-                                {{ u.name[:2].upper() if u.name else 'US' }}
-                            </div>
-                            <div>
-                                <div class="fw-bold text-dark">{{ u.name }}</div>
-                                <small class="text-muted font-mono" style="font-size: 0.75rem;">ID: #{{ u.id }}</small>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="font-mono small">{{ u.email }}</td>
-                    <td class="text-muted small">{{ u.phone or '—' }}</td>
-                    <td>
-                        {% if u.role and u.role.name == 'Admin' %}
-                            <span class="badge badge-danger">Admin</span>
-                        {% elif u.role and u.role.name == 'Manager' %}
-                            <span class="badge badge-warning">Manager</span>
-                        {% else %}
-                            <span class="badge badge-secondary">{{ u.role.name if u.role else 'Staff' }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if u.active %}
-                            <span class="badge badge-success">● Active</span>
-                        {% else %}
-                            <span class="badge bg-secondary text-white">Inactive</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-end">
-                        <div class="d-inline-flex gap-2">
-                            <a href="{{ url_for('main.edit_user', user_id=u.id) }}" class="btn btn-sm btn-secondary">Edit</a>
-                            {% if current_user.id != u.id %}
-                            <form method="POST" action="{{ url_for('main.delete_user', user_id=u.id) }}" onsubmit="return confirm('Are you sure you want to delete this user?');" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6">
-                        <div class="empty-state-box py-5">
-                            <p class="mb-0 text-muted">No users found in system.</p>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    {% if total_pages > 1 %}
+    <div class="d-flex align-items-center gap-1">
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page <= 1 %}disabled{% endif %}" href="{{ url_for('main.users', q=query, role_id=role_filter, page=page-1) if page > 1 else '#' }}">&lt;</a>
+      {% for pno in pages %}
+        {% if pno is none %}
+          <span class="text-muted px-1">...</span>
+        {% else %}
+          <a class="btn btn-sm {% if pno == page %}btn-orange-primary{% else %}btn-light border{% endif %} p-1 px-2" href="{{ url_for('main.users', q=query, role_id=role_filter, page=pno) }}">{{ pno }}</a>
+        {% endif %}
+      {% endfor %}
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page >= total_pages %}disabled{% endif %}" href="{{ url_for('main.users', q=query, role_id=role_filter, page=page+1) if page < total_pages else '#' }}">&gt;</a>
     </div>
+    {% endif %}
+  </div>
 </div>
+
+<style>
+.btn-icon-action {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.btn-icon-action:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+</style>
 {% endblock %}

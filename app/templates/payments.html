@@ -4,104 +4,272 @@
 {% block page_subtitle %}Track payment records, payment methods, receipts, and resulting balances.{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-end align-items-center mb-4">
-    <a href="{{ url_for('main.add_payment') }}" class="btn btn-orange-primary">+ Record New Payment</a>
-</div>
 
-<!-- Search Bar -->
-<div class="card border-0 mb-4">
-    <div class="card-body p-3">
-        <form method="GET" action="{{ url_for('main.payments') }}" class="row g-2">
-            <div class="col-md-10">
-                <input type="text" name="q" class="form-control" placeholder="Search by vendor name or payment method (Cash, UPI, Cheque, Bank Transfer)..." value="{{ query }}">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Search</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="card border-0">
-    <div class="table-responsive">
-        <table class="table align-middle mb-0">
-            <thead>
-                <tr>
-                    <th>Payment Date</th>
-                    <th>Vendor Name</th>
-                    <th>Payment Method</th>
-                    <th>Reference No.</th>
-                    <th>Amount Paid</th>
-                    <th>Payment Proof</th>
-                    <th>Vendor Current Balance</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for pmt in payments %}
-                <tr>
-                    <td class="fw-semibold text-dark">{{ pmt.payment_date }}</td>
-                    <td>
-                        {% if pmt.vendor %}
-                        <a href="{{ url_for('main.vendor_detail', vendor_id=pmt.vendor.id) }}" class="text-dark text-decoration-none fw-semibold">
-                            🏢 {{ pmt.vendor.vendor_name }}
-                        </a>
-                        {% else %}
-                        <span class="text-muted">Unlinked</span>
-                        {% endif %}
-                    </td>
-                    <td><span class="badge badge-secondary">{{ pmt.payment_method }}</span></td>
-                    <td class="font-mono small text-muted">{{ pmt.reference_number or '-' }}</td>
-                    <td class="fw-bold text-success">₹{{ pmt.amount_paid | round(2) }}</td>
-                    <td>
-                        {% if pmt.attachment %}
-                        <a href="{{ url_for('main.uploaded_file', filename=pmt.attachment) }}" target="_blank" class="btn btn-xs btn-outline-secondary">View Receipt</a>
-                        {% else %}
-                        <span class="text-muted small">-</span>
-                        {% endif %}
-                    </td>
-
-                    <td>
-                        {% if pmt.vendor %}
-                            {% if pmt.vendor.outstanding_balance > 0 %}
-                                <span class="badge badge-danger">₹{{ pmt.vendor.outstanding_balance | round(2) }}</span>
-                            {% else %}
-                                <span class="badge badge-success">₹0.00 (Settled)</span>
-                            {% endif %}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td class="text-end">
-                        <div class="btn-group btn-group-sm">
-                            <a href="{{ url_for('main.view_payment', payment_id=pmt.id) }}" class="btn btn-outline-primary">View</a>
-                            <a href="{{ url_for('main.edit_payment', payment_id=pmt.id) }}" class="btn btn-outline-secondary">Edit</a>
-                            {% if current_user.role and current_user.role.name == 'Admin' %}
-                            <form method="POST" action="{{ url_for('main.delete_payment', payment_id=pmt.id) }}" class="d-inline" onsubmit="return confirm('Delete this payment record?');">
-                                <button type="submit" class="btn btn-outline-danger">Delete</button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="7" class="text-center py-5 text-muted">
-                        No payment records found. Click <strong class="text-success">+ Record New Payment</strong> to add one.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <div class="p-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-2" style="font-size: 0.8125rem;">
-        <div class="text-muted">Showing 1 to {{ payments|length }} of {{ payments|length }} entries</div>
-        <div class="d-flex align-items-center gap-1">
-            <button class="btn btn-sm btn-light border p-1 px-2.5" disabled>&lt;</button>
-            <button class="btn btn-sm btn-orange-primary p-1 px-2.5">1</button>
-            <button class="btn btn-sm btn-light border p-1 px-2.5">2</button>
-            <button class="btn btn-sm btn-light border p-1 px-2.5">&gt;</button>
+<!-- 5 Top Metric KPI Row -->
+<div class="row g-3 mb-4">
+  <!-- Card 1: TOTAL PAYMENTS (Orange Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-orange">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
         </div>
+        <div>
+          <div class="kpi-title-header">TOTAL PAYMENTS</div>
+          <div class="kpi-value-num">{{ total_payments }}</div>
+          <div class="kpi-trend-green mt-1">↑ {{ this_month }} this month</div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Card 2: TOTAL PAID (Blue Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-blue">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">TOTAL PAID</div>
+          <div class="kpi-value-num">₹{{ "{:,.0f}".format(total_paid_val) }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">All time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: AVG PAYMENT (Green Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-green">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">AVG PAYMENT</div>
+          <div class="kpi-value-num">₹{{ "{:,.0f}".format(avg_payment) }}</div>
+          <div class="kpi-trend-green mt-1">Per transaction</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4: METHODS USED (Violet Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-violet">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><circle cx="15" cy="15" r="2"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">METHODS USED</div>
+          <div class="kpi-value-num">{{ methods_used|length }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">{{ methods_used|join(', ') }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 5: HIGHEST PAYMENT (Amber Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-amber">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">HIGHEST PAYMENT</div>
+          <div class="kpi-value-num">₹{{ "{:,.0f}".format(highest_payment) }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">Single transaction</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- Main Table Card with Search & Clean Inline Filters (Fixed Height Container) -->
+<div class="card-clean mb-4" style="min-height: 520px; display: flex; flex-direction: column; justify-content: space-between;">
+  <div class="p-3 border-bottom">
+    <form method="GET" action="{{ url_for('main.payments') }}" class="row g-2 align-items-center">
+      <!-- 1. Search Box -->
+      <div class="col-xl-4 col-md-4">
+        <div class="header-search-box w-100" style="background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; height: 38px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" name="q" placeholder="Search vendor, method, reference..." value="{{ query }}">
+        </div>
+      </div>
+
+      <!-- 2. Method Select -->
+      <div class="col-xl-2 col-md-2">
+        <select name="method" class="filter-select-clean font-mono w-100" style="height: 38px;" onchange="this.form.submit()">
+          <option value="All" {% if method_filter == 'All' or not method_filter %}selected{% endif %}>Method: All</option>
+          {% for m in methods_used %}
+            <option value="{{ m }}" {% if method_filter == m %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- 3. Vendor Select -->
+      <div class="col-xl-2 col-md-2">
+        <select name="vendor_id" class="filter-select-clean font-mono w-100" style="height: 38px;" onchange="this.form.submit()">
+          <option value="">Vendor: All</option>
+          {% for v in vendors %}
+            <option value="{{ v.id }}" {% if vendor_filter == v.id %}selected{% endif %}>{{ v.vendor_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- 4. Action Buttons -->
+      <div class="col-xl-4 col-md-4 d-flex justify-content-end gap-2 ms-auto">
+        <button type="submit" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1 font-mono text-nowrap" style="height: 38px; border-radius: 8px; font-size: 0.78rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          <span>Filter</span>
+        </button>
+        <a href="{{ url_for('main.add_payment') }}" class="btn btn-orange-primary text-nowrap d-inline-flex align-items-center gap-1" style="height: 38px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Record Payment</span>
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table table-clean table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Payment Date</th>
+          <th>Vendor</th>
+          <th>Method</th>
+          <th>Reference No.</th>
+          <th class="text-end">Amount Paid</th>
+          <th class="text-center">Receipt</th>
+          <th>Vendor Balance</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pmt in payments %}
+        <tr>
+          <td class="font-mono fw-semibold text-dark">{{ pmt.payment_date.strftime('%d %b %Y') }}</td>
+          <td>
+            {% if pmt.vendor %}
+              <div class="d-flex align-items-center gap-2">
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold font-mono" style="width: 30px; height: 30px; background-color: #fff7ed; color: #ea580c; font-size: 0.7rem; border: 1px solid #fed7aa; flex-shrink: 0;">{{ pmt.vendor.vendor_name[:2].upper() }}</div>
+                <a href="{{ url_for('main.vendor_detail', vendor_id=pmt.vendor.id) }}" class="vendor-name-text text-decoration-none">{{ pmt.vendor.vendor_name }}</a>
+              </div>
+            {% else %}
+              <span class="text-muted">Unlinked</span>
+            {% endif %}
+          </td>
+          <td>
+            {% set m = pmt.payment_method %}
+            {% if m in ('Cash',) %}
+              <span class="badge" style="background-color: #dcfce7; color: #15803d; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">{{ m }}</span>
+            {% elif m in ('UPI',) %}
+              <span class="badge" style="background-color: #dbeafe; color: #2563eb; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">{{ m }}</span>
+            {% elif m in ('Cheque', 'Check') %}
+              <span class="badge" style="background-color: #ffedd5; color: #c2410c; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">{{ m }}</span>
+            {% elif m in ('Bank Transfer', 'Transfer', 'NEFT') %}
+              <span class="badge" style="background-color: #ede9fe; color: #7c3aed; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">{{ m }}</span>
+            {% else %}
+              <span class="badge" style="background-color: #f1f5f9; color: #475569; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">{{ m }}</span>
+            {% endif %}
+          </td>
+          <td class="font-mono small text-muted">{{ pmt.reference_number or '—' }}</td>
+          <td class="fw-bold text-end font-mono text-dark">₹{{ "{:,.2f}".format(pmt.amount_paid) }}</td>
+          <td class="text-center">
+            {% if pmt.attachment %}
+              <a href="{{ url_for('main.uploaded_file', filename=pmt.attachment) }}" target="_blank" class="btn-icon-action" title="View Receipt">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              </a>
+            {% else %}
+              <span class="text-muted small">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if pmt.vendor %}
+              {% if pmt.vendor.outstanding_balance > 0 %}
+                <span class="badge" style="background-color: #fee2e2; color: #b91c1c; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">₹{{ "{:,.2f}".format(pmt.vendor.outstanding_balance) }}</span>
+              {% else %}
+                <span class="badge" style="background-color: #dcfce7; color: #15803d; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">Settled</span>
+              {% endif %}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{{ url_for('main.view_payment', payment_id=pmt.id) }}" class="btn-icon-action" title="View Payment">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </a>
+            <a href="{{ url_for('main.edit_payment', payment_id=pmt.id) }}" class="btn-icon-action" title="Edit Payment">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </a>
+            {% if current_user.role and current_user.role.name == 'Admin' %}
+            <form method="POST" action="{{ url_for('main.delete_payment', payment_id=pmt.id) }}" class="d-inline" onsubmit="return confirm('Delete this payment record?');">
+              <button type="submit" class="btn-icon-action" title="Delete Payment" style="border: 1px solid #fee2e2; background-color: #fff5f5;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center py-5 text-muted">
+            <div class="d-flex justify-content-center mb-2">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            </div>
+            <div>No payment records found.</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer Pagination (Fixed at Bottom) -->
+  <div class="card-table-footer-fixed" style="font-size: 0.78rem;">
+    <div class="text-muted">
+      {% if total_items %}
+        Showing {{ start_idx }} to {{ end_idx }} of {{ total_items }} entries
+      {% else %}
+        No entries found
+      {% endif %}
+    </div>
+    {% if total_pages > 1 %}
+    <div class="d-flex align-items-center gap-1">
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page <= 1 %}disabled{% endif %}" href="{{ url_for('main.payments', q=query, method=method_filter, vendor_id=vendor_filter, page=page-1) if page > 1 else '#' }}">&lt;</a>
+      {% for pno in pages %}
+        {% if pno is none %}
+          <span class="text-muted px-1">...</span>
+        {% else %}
+          <a class="btn btn-sm {% if pno == page %}btn-orange-primary{% else %}btn-light border{% endif %} p-1 px-2" href="{{ url_for('main.payments', q=query, method=method_filter, vendor_id=vendor_filter, page=pno) }}">{{ pno }}</a>
+        {% endif %}
+      {% endfor %}
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page >= total_pages %}disabled{% endif %}" href="{{ url_for('main.payments', q=query, method=method_filter, vendor_id=vendor_filter, page=page+1) if page < total_pages else '#' }}">&gt;</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+.btn-icon-action {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.btn-icon-action:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+</style>
 {% endblock %}

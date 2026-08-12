@@ -4,52 +4,271 @@
 {% block page_subtitle %}Generate, view, and print proforma & tax invoices for vendor transactions.{% endblock %}
 
 {% block content %}
-<div class="card border-0">
-    <div class="table-responsive">
-        <table class="table align-middle mb-0">
-            <thead>
-                <tr>
-                    <th>Invoice No / PO</th>
-                    <th>Vendor Name</th>
-                    <th>Date</th>
-                    <th>Items</th>
-                    <th class="text-end">Invoice Amount</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in purchases %}
-                <tr>
-                    <td class="fw-bold font-mono text-primary">INV-{{ p.purchase_id }}</td>
-                    <td>
-                        {% if p.vendor %}
-                        <a href="{{ url_for('main.vendor_detail', vendor_id=p.vendor.id) }}" class="text-dark text-decoration-none fw-semibold">
-                            🏢 {{ p.vendor.vendor_name }}
-                        </a>
-                        {% else %}
-                        <span class="text-muted">Unlinked</span>
-                        {% endif %}
-                    </td>
-                    <td class="font-mono small text-muted">{{ p.purchase_date }}</td>
-                    <td>{{ p.brand_name or '-' }} {{ p.model_name or '' }} (x{{ p.quantity }})</td>
-                    <td class="fw-bold text-end font-mono">₹{{ "{:,.2f}".format(p.total_amount) }}</td>
-                    <td class="text-end">
-                        <a href="{{ url_for('main.view_invoice', purchase_id=p.id) }}" class="btn btn-sm btn-outline-primary">
-                            Print / View Invoice
-                        </a>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6">
-                        <div class="empty-state-box p-4 text-center">
-                            <p class="text-muted mb-0">No invoices available.</p>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+<!-- 5 Top Metric KPI Row -->
+<div class="row g-3 mb-4">
+  <!-- Card 1: TOTAL INVOICES (Orange Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-orange">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">TOTAL INVOICES</div>
+          <div class="kpi-value-num">{{ total_invoices }}</div>
+          <div class="kpi-trend-green mt-1">↑ {{ this_month }} this month</div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Card 2: INVOICED AMOUNT (Blue Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-blue">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">INVOICED AMOUNT</div>
+          <div class="kpi-value-num">₹{{ "{:,.0f}".format(invoiced_total) }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">Total billed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: VENDORS BILLED (Green Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-green">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">VENDORS BILLED</div>
+          <div class="kpi-value-num">{{ vendor_count }}</div>
+          <div class="kpi-trend-green mt-1">Active suppliers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4: AVG INVOICE VALUE (Amber Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-amber">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">AVG INVOICE VALUE</div>
+          <div class="kpi-value-num">₹{{ "{:,.0f}".format(avg_invoice) }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">Per invoice</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 5: DELIVERED & READY (Violet Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-violet">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">INVOICE TYPES</div>
+          <div class="kpi-value-num">{{ purchase_types }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">Retail / bulk</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- Main Table Card with Search & Clean Inline Filters (Fixed Height Container) -->
+<div class="card-clean mb-4" style="min-height: 520px; display: flex; flex-direction: column; justify-content: space-between;">
+  <div class="p-3 border-bottom">
+    <form method="GET" action="{{ url_for('main.invoices') }}" class="row g-2 align-items-center">
+      <!-- 1. Search Box -->
+      <div class="col-xl-4 col-md-4">
+        <div class="header-search-box w-100" style="background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; height: 38px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" name="q" placeholder="Search invoice no., vendor, product..." value="{{ query }}">
+        </div>
+      </div>
+
+      <!-- 2. Type Select -->
+      <div class="col-xl-2 col-md-2">
+        <select name="type" class="filter-select-clean font-mono w-100" style="height: 38px;" onchange="this.form.submit()">
+          <option value="All" {% if type_filter == 'All' or not type_filter %}selected{% endif %}>Type: All</option>
+          {% for t in purchase_type_list %}
+            <option value="{{ t }}" {% if type_filter == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- 3. Vendor Select -->
+      <div class="col-xl-2 col-md-2">
+        <select name="vendor_id" class="filter-select-clean font-mono w-100" style="height: 38px;" onchange="this.form.submit()">
+          <option value="">Vendor: All</option>
+          {% for v in vendors %}
+            <option value="{{ v.id }}" {% if vendor_filter == v.id %}selected{% endif %}>{{ v.vendor_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- 4. Action Buttons -->
+      <div class="col-xl-4 col-md-4 d-flex justify-content-end gap-2 ms-auto">
+        <button type="submit" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1 font-mono text-nowrap" style="height: 38px; border-radius: 8px; font-size: 0.78rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          <span>Filter</span>
+        </button>
+        <a href="{{ url_for('main.invoices') }}" class="btn btn-outline-secondary text-nowrap d-inline-flex align-items-center gap-1 font-mono" style="height: 38px; border-radius: 8px; font-size: 0.78rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          <span>Reset</span>
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table table-clean table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Invoice No.</th>
+          <th>Vendor</th>
+          <th>Type</th>
+          <th>Date</th>
+          <th>Product</th>
+          <th>Qty</th>
+          <th class="text-end">Invoice Amount</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in purchases %}
+        <tr>
+          <td>
+            <div class="fw-bold font-mono text-dark">INV-{{ p.purchase_id }}</div>
+            <div class="text-muted small font-mono" style="font-size: 0.7rem;">{{ p.purchase_id }}</div>
+          </td>
+          <td>
+            {% if p.vendor %}
+              <div class="d-flex align-items-center gap-2">
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold font-mono" style="width: 30px; height: 30px; background-color: #fff7ed; color: #ea580c; font-size: 0.7rem; border: 1px solid #fed7aa; flex-shrink: 0;">{{ p.vendor.vendor_name[:2].upper() }}</div>
+                <a href="{{ url_for('main.vendor_detail', vendor_id=p.vendor.id) }}" class="vendor-name-text text-decoration-none">{{ p.vendor.vendor_name }}</a>
+              </div>
+            {% else %}
+              <span class="text-muted">Unlinked</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if p.purchase_type == 'Wholesale' %}
+              <span class="badge" style="background-color: #ede9fe; color: #7c3aed; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">Wholesale</span>
+            {% elif p.purchase_type == 'Retail' %}
+              <span class="badge" style="background-color: #dbeafe; color: #2563eb; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">Retail</span>
+            {% else %}
+              <span class="badge" style="background-color: #f1f5f9; color: #475569; font-weight: 700; padding: 0.3em 0.8em; border-radius: 999px; font-size: 0.72rem;">{{ p.purchase_type }}</span>
+            {% endif %}
+          </td>
+          <td class="font-mono small text-muted">{{ p.purchase_date.strftime('%d %b %Y') }}</td>
+          <td>
+            <div class="fw-semibold text-dark">{{ p.brand_name or '—' }} {{ p.model_name or '' }}</div>
+          </td>
+          <td class="font-mono fw-bold text-dark">{{ p.quantity }}</td>
+          <td class="fw-bold text-end font-mono text-dark">₹{{ "{:,.2f}".format(p.total_amount) }}</td>
+          <td class="text-end">
+            <div class="d-flex justify-content-end align-items-center gap-2">
+              <a href="{{ url_for('main.view_invoice', purchase_id=p.id) }}" class="btn-action-invoice">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span>View Invoice</span>
+              </a>
+              <a href="{{ url_for('main.view_purchase', purchase_id=p.id) }}" class="btn-icon-action" title="View Purchase Order">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center py-5 text-muted">
+            <div class="d-flex justify-content-center mb-2">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div>No invoices found.</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer Pagination (Fixed at Bottom) -->
+  <div class="card-table-footer-fixed" style="font-size: 0.78rem;">
+    <div class="text-muted">
+      {% if total_items %}
+        Showing {{ start_idx }} to {{ end_idx }} of {{ total_items }} entries
+      {% else %}
+        No entries found
+      {% endif %}
+    </div>
+    {% if total_pages > 1 %}
+    <div class="d-flex align-items-center gap-1">
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page <= 1 %}disabled{% endif %}" href="{{ url_for('main.invoices', q=query, vendor_id=vendor_filter, type=type_filter, page=page-1) if page > 1 else '#' }}">&lt;</a>
+      {% for pno in pages %}
+        {% if pno is none %}
+          <span class="text-muted px-1">...</span>
+        {% else %}
+          <a class="btn btn-sm {% if pno == page %}btn-orange-primary{% else %}btn-light border{% endif %} p-1 px-2" href="{{ url_for('main.invoices', q=query, vendor_id=vendor_filter, type=type_filter, page=pno) }}">{{ pno }}</a>
+        {% endif %}
+      {% endfor %}
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page >= total_pages %}disabled{% endif %}" href="{{ url_for('main.invoices', q=query, vendor_id=vendor_filter, type=type_filter, page=page+1) if page < total_pages else '#' }}">&gt;</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+.btn-icon-action {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.btn-icon-action:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+.btn-action-invoice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #fed7aa;
+  background-color: #fff7ed;
+  color: #ea580c;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.btn-action-invoice:hover {
+  background-color: #ea580c;
+  border-color: #ea580c;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+</style>
 {% endblock %}

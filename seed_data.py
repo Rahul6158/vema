@@ -148,7 +148,7 @@ def seed_catalog():
             sku=f'SKU-{brand[:3].upper()}-{idx:03d}',
             purchase_price=pp,
             selling_price=sp,
-            stock=random.randint(8, 80),
+            stock=random.randint(8, 80) if idx % 7 else random.choice([0, 0, 1, 2, 3, 4, 5]),
             warranty_months=wmonths,
             active=True,
         )
@@ -362,12 +362,17 @@ def seed_transactions(products, brands, vendors, customers, users):
 
         # GRN for a subset of purchases
         if random.random() < 0.6:
+            is_partial = random.random() < 0.15
+            received_qty = max(1, qty - random.randint(1, max(1, qty // 3))) if is_partial else qty
+            note = random.choice(grn_notes)
+            if is_partial:
+                note = random.choice(['Partial delivery — balance pending', 'Short supply, rest on backorder'])
             storage.add_goods_received(GoodsReceived(
                 grn_number=f'GRN-{uuid.uuid4().hex[:6].upper()}',
                 purchase_id=purchase.id,
                 received_date=purchase_date + timedelta(days=random.randint(0, 5)),
-                received_qty=qty,
-                condition_notes=random.choice(grn_notes),
+                received_qty=received_qty,
+                condition_notes=note,
                 received_by=random.choice(users).name,
                 created_at=created_at + timedelta(days=1),
             ))

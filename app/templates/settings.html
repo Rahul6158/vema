@@ -1,86 +1,143 @@
-{% extends 'layout.html' %}
+{% extends "layout.html" %}
+
+{% block page_title %}System Settings{% endblock %}
+{% block page_subtitle %}Configure store profile, invoicing options, and WhatsApp API credentials.{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<style>
+  .settings-page { max-width: 1000px; overflow-x: hidden; }
+
+  .settings-page .form-page-header { margin-bottom: 1.5rem; }
+
+  .settings-page .form-section-header { position: relative; padding: 1rem 1.4rem 0.85rem; background: #ffffff; overflow: hidden; }
+  .settings-page .form-section-header::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+  .settings-page .store-section::before { background: #ea580c; }
+  .settings-page .whatsapp-section::before { background: #2563eb; }
+
+  .settings-page .form-section-title { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #334155; display: flex; align-items: center; margin: 0; }
+
+  .settings-page .form-page-card .form-label { font-size: 0.76rem; font-weight: 700; color: #475569; margin-bottom: 0.4rem; }
+
+  .settings-page .form-page-card .form-control,
+  .settings-page .form-page-card .form-select {
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    height: 44px;
+    padding: 0.5rem 0.8rem;
+    background-color: #fdfdfd;
+    font-size: 0.87rem;
+    box-shadow: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  }
+
+  .settings-page .form-page-card .form-control:hover { border-color: #94a3b8; }
+
+  .settings-page .form-page-card .form-control:focus,
+  .settings-page .form-page-card .form-select:focus {
+    border-color: #ea580c !important;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.16), 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+    outline: none;
+  }
+
+  .settings-page .form-page-card textarea.form-control { height: auto; min-height: 96px; resize: none; }
+  .settings-page .form-page-card .form-control::placeholder { color: #a3aebc; font-weight: 400; }
+</style>
+
+<div class="form-page-wrapper settings-page">
+
+  <!-- Page Header -->
+  <div class="form-page-header">
     <div>
-        <h1 class="page-title mb-1">System Settings</h1>
-        <p class="text-muted small mb-0">Configure store profile, invoicing options, and WhatsApp API credentials.</p>
+      <h1 class="form-page-title">System Settings</h1>
+      <p class="form-page-subtitle">Configure store profile, invoicing options, and WhatsApp API credentials.</p>
     </div>
-</div>
+  </div>
 
-<form method="POST">
+  <form method="POST">
     <div class="row g-4">
-        <!-- Store Information Card -->
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <span class="card-title-text">Store Profile & Invoicing</span>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label">Store / Company Name</label>
-                            <input type="text" class="form-control" name="store_name" value="{{ settings.get('store_name', '') }}" placeholder="VEMA Home Appliances Ltd">
-                        </div>
+      <!-- Store Information Card -->
+      <div class="col-lg-6">
+        <div class="form-page-card h-100 mb-0">
+          <div class="form-section-header store-section">
+            <p class="form-section-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; color: #ea580c;"><path d="M3 9l1-5h16l1 5"/><path d="M3 9a2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2"/><path d="M5 11v9h14v-9"/><path d="M9 20v-5h6v5"/></svg>
+              Store Profile &amp; Invoicing
+            </p>
+          </div>
+          <div class="form-section-body">
+            <div class="row g-3">
+              <div class="col-md-12">
+                <label class="form-label">Store / Company Name</label>
+                <input type="text" class="form-control" name="store_name" value="{{ settings.get('store_name', '') }}" placeholder="VEMA Home Appliances Ltd">
+              </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Contact Phone</label>
-                            <input type="tel" class="form-control font-mono" name="store_phone" value="{{ settings.get('store_phone', '') }}" placeholder="+91 9876543210">
-                        </div>
+              <div class="col-md-6">
+                <label class="form-label">Contact Phone</label>
+                <input type="tel" class="form-control font-mono" name="store_phone" value="{{ settings.get('store_phone', '') }}" placeholder="+91 9876543210">
+              </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Contact Email</label>
-                            <input type="email" class="form-control font-mono" name="store_email" value="{{ settings.get('store_email', '') }}" placeholder="contact@vema.com">
-                        </div>
+              <div class="col-md-6">
+                <label class="form-label">Contact Email</label>
+                <input type="email" class="form-control font-mono" name="store_email" value="{{ settings.get('store_email', '') }}" placeholder="contact@vema.com">
+              </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label">Store Address</label>
-                            <input type="text" class="form-control" name="store_address" value="{{ settings.get('store_address', '') }}" placeholder="123 Commercial Plaza, Main Street">
-                        </div>
+              <div class="col-md-12">
+                <label class="form-label">Store Address</label>
+                <input type="text" class="form-control" name="store_address" value="{{ settings.get('store_address', '') }}" placeholder="123 Commercial Plaza, Main Street">
+              </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label">Invoice Prefix</label>
-                            <input type="text" class="form-control font-mono" name="invoice_prefix" value="{{ settings.get('invoice_prefix', 'VEMA-INV-') }}">
-                        </div>
-                    </div>
-                </div>
+              <div class="col-md-12">
+                <label class="form-label">Invoice Prefix</label>
+                <input type="text" class="form-control font-mono" name="invoice_prefix" value="{{ settings.get('invoice_prefix', 'VEMA-INV-') }}">
+              </div>
             </div>
+          </div>
         </div>
+      </div>
 
-        <!-- WhatsApp API Credentials Card -->
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <span class="card-title-text">WhatsApp Business Integration</span>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label">WhatsApp Phone Number ID</label>
-                            <input type="text" class="form-control font-mono" name="whatsapp_phone_id" value="{{ settings.get('whatsapp_phone_id', '') }}">
-                        </div>
+      <!-- WhatsApp API Credentials Card -->
+      <div class="col-lg-6">
+        <div class="form-page-card h-100 mb-0">
+          <div class="form-section-header whatsapp-section">
+            <p class="form-section-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; color: #2563eb;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              WhatsApp Business Integration
+            </p>
+          </div>
+          <div class="form-section-body">
+            <div class="row g-3">
+              <div class="col-md-12">
+                <label class="form-label">WhatsApp Phone Number ID</label>
+                <input type="text" class="form-control font-mono" name="whatsapp_phone_id" value="{{ settings.get('whatsapp_phone_id', '') }}">
+              </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label">WhatsApp Account ID</label>
-                            <input type="text" class="form-control font-mono" name="whatsapp_account_id" value="{{ settings.get('whatsapp_account_id', '') }}">
-                        </div>
+              <div class="col-md-12">
+                <label class="form-label">WhatsApp Account ID</label>
+                <input type="text" class="form-control font-mono" name="whatsapp_account_id" value="{{ settings.get('whatsapp_account_id', '') }}">
+              </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label">WhatsApp Permanent Access Token</label>
-                            <input type="password" class="form-control font-mono" name="whatsapp_access_token" value="{{ settings.get('whatsapp_access_token', '') }}">
-                        </div>
+              <div class="col-md-12">
+                <label class="form-label">WhatsApp Permanent Access Token</label>
+                <input type="password" class="form-control font-mono" name="whatsapp_access_token" value="{{ settings.get('whatsapp_access_token', '') }}">
+              </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label">WhatsApp Notification Template</label>
-                            <textarea class="form-control font-mono" name="message_template" rows="3">{{ settings.get('message_template', '') }}</textarea>
-                        </div>
-                    </div>
-                </div>
+              <div class="col-md-12">
+                <label class="form-label">WhatsApp Notification Template</label>
+                <textarea class="form-control font-mono" name="message_template" rows="3">{{ settings.get('message_template', '') }}</textarea>
+              </div>
             </div>
+          </div>
         </div>
-
-        <div class="col-12 text-end">
-            <button type="submit" class="btn btn-primary px-5 py-2.5">Save All Settings</button>
-        </div>
+      </div>
     </div>
-</form>
+
+    <!-- Action Bar -->
+    <div class="form-action-bar form-page-card" style="border-radius: 16px;">
+      <a href="{{ url_for('main.dashboard') }}" class="btn-form-cancel">Back to Dashboard</a>
+      <button type="submit" class="btn-form-primary">Save All Settings</button>
+    </div>
+  </form>
+
+</div>
 {% endblock %}

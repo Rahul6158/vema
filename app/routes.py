@@ -535,7 +535,10 @@ def add_purchase():
 @login_required
 def view_purchase(purchase_id):
     purchase = get_object_or_404(storage.get_purchase(purchase_id))
-    return render_template('view_purchase.html', purchase=purchase)
+    grn = next((g for g in storage.goods_received if g.purchase_id == purchase.id), None)
+    items = purchase.items
+    warranty = purchase.warranty
+    return render_template('view_purchase.html', purchase=purchase, grn=grn, items=items or None, warranty=warranty)
 
 
 @main_bp.route('/purchases/<int:purchase_id>/delete', methods=['POST'])
@@ -557,12 +560,53 @@ def delete_purchase(purchase_id):
 @login_required
 def payments():
     query = request.args.get('q', '')
-    if query:
-        payment_list = storage.search_payments(query)
-    else:
-        payment_list = storage.payments
+    method_filter = request.args.get('method', '')
+    vendor_filter = request.args.get('vendor_id', type=int)
+    page = request.args.get('page', 1, type=int)
+
+    payment_list = storage.search_payments(query) if query else list(storage.payments)
+    if method_filter and method_filter != 'All':
+        payment_list = [p for p in payment_list if p.payment_method == method_filter]
+    if vendor_filter:
+        payment_list = [p for p in payment_list if p.vendor_id == vendor_filter]
     payment_list = sorted(payment_list, key=lambda p: p.payment_date or p.created_at.date(), reverse=True)
-    return render_template('payments.html', payments=payment_list, query=query)
+
+    total_payments = len(storage.payments)
+    total_paid_val = sum(p.amount_paid for p in storage.payments)
+    today = date.today()
+    this_month = sum(1 for p in storage.payments
+                     if p.payment_date and p.payment_date.year == today.year and p.payment_date.month == today.month)
+    methods_used = sorted({p.payment_method for p in storage.payments})
+    avg_payment = round(total_paid_val / total_payments) if total_payments else 0
+    highest_payment = round(max((p.amount_paid for p in storage.payments), default=0))
+
+    vendors = sorted(storage.vendors, key=lambda v: v.vendor_name)
+
+    payments_page, page, total_pages, total_items = paginate(payment_list, page)
+    pages = pagination_pages(page, total_pages)
+    start_idx = (page - 1) * PER_PAGE + 1
+    end_idx = min(start_idx + len(payments_page) - 1, total_items)
+
+    return render_template(
+        'payments.html',
+        payments=payments_page,
+        vendors=vendors,
+        query=query,
+        method_filter=method_filter,
+        vendor_filter=vendor_filter,
+        page=page,
+        total_pages=total_pages,
+        total_items=total_items,
+        pages=pages,
+        start_idx=start_idx,
+        end_idx=end_idx,
+        total_payments=total_payments,
+        total_paid_val=total_paid_val,
+        this_month=this_month,
+        methods_used=methods_used,
+        avg_payment=avg_payment,
+        highest_payment=highest_payment
+    )
 
 
 @main_bp.route('/payments/add', methods=['GET', 'POST'])
@@ -678,6 +722,36 @@ def reports():
 
     vendors = sorted(storage.vendors, key=lambda v: v.vendor_name)
 
+    # --- Chart data ----------------------------------------------------
+    # Purchase trend: per-day totals; collapse to monthly for long ranges
+    purchase_buckets = {}
+    for p in filtered_purchases:
+        d = p.purchase_date or p.created_at.date()
+        purchase_buckets[d] = purchase_buckets.get(d, 0) + p.total_amount
+
+    if (end_date - start_date).days > 45:
+        monthly = {}
+        for d, val in purchase_buckets.items():
+            key = date(d.year, d.month, 1)
+            monthly[key] = monthly.get(key, 0) + val
+        purchase_buckets = monthly
+
+    purchase_chart_labels = [k.strftime('%d %b') for k in sorted(purchase_buckets)]
+    purchase_chart_values = [purchase_buckets[k] for k in sorted(purchase_buckets)]
+
+    # Payment method breakdown
+    method_buckets = {}
+    for pmt in filtered_payments:
+        m = pmt.payment_method or 'Other'
+        method_buckets[m] = method_buckets.get(m, 0) + pmt.amount_paid
+    method_chart_labels = list(method_buckets.keys())
+    method_chart_values = list(method_buckets.values())
+
+    # Top vendors by total purchased (all-time, matches summary table)
+    top_vendors = sorted(storage.vendors, key=lambda v: v.total_purchased, reverse=True)[:8]
+    vendor_chart_labels = [v.vendor_name for v in top_vendors]
+    vendor_chart_values = [v.total_purchased for v in top_vendors]
+
     return render_template(
         'reports.html',
         start_date=start_date,
@@ -688,7 +762,13 @@ def reports():
         payments=filtered_payments,
         vendors=vendors,
         total_purchase_val=total_purchase_val,
-        total_payment_val=total_payment_val
+        total_payment_val=total_payment_val,
+        purchase_chart_labels=purchase_chart_labels,
+        purchase_chart_values=purchase_chart_values,
+        method_chart_labels=method_chart_labels,
+        method_chart_values=method_chart_values,
+        vendor_chart_labels=vendor_chart_labels,
+        vendor_chart_values=vendor_chart_values
     )
 
 
@@ -699,11 +779,54 @@ def reports():
 @login_required
 def products():
     query = request.args.get('q', '')
-    if query:
-        prod_list = storage.search_products(query)
-    else:
-        prod_list = storage.products
-    return render_template('products.html', products=prod_list, query=query)
+    category_filter = request.args.get('category_id', type=int)
+    brand_filter = request.args.get('brand_id', type=int)
+    page = request.args.get('page', 1, type=int)
+
+    prod_list = storage.search_products(query) if query else list(storage.products)
+    if category_filter:
+        prod_list = [p for p in prod_list if p.category_id == category_filter]
+    if brand_filter:
+        prod_list = [p for p in prod_list if p.brand_id == brand_filter]
+
+    total_products = len(storage.products)
+    total_stock = sum(p.stock for p in storage.products)
+    stock_value = sum(p.stock * (p.purchase_price or 0) for p in storage.products)
+    category_count = len({p.category_id for p in storage.products if p.category_id})
+    low_stock_count = sum(1 for p in storage.products if p.stock <= 5)
+    margins = [((p.selling_price or 0) - (p.purchase_price or 0)) / (p.purchase_price or 0) * 100
+               for p in storage.products if p.purchase_price]
+    avg_margin = round(sum(margins) / len(margins)) if margins else 0
+
+    categories = sorted(storage.categories, key=lambda c: c.name)
+    brands = sorted(storage.brands, key=lambda b: b.name)
+
+    products_page, page, total_pages, total_items = paginate(prod_list, page)
+    pages = pagination_pages(page, total_pages)
+    start_idx = (page - 1) * PER_PAGE + 1
+    end_idx = min(start_idx + len(products_page) - 1, total_items)
+
+    return render_template(
+        'products.html',
+        products=products_page,
+        categories=categories,
+        brands=brands,
+        query=query,
+        category_filter=category_filter,
+        brand_filter=brand_filter,
+        page=page,
+        total_pages=total_pages,
+        total_items=total_items,
+        pages=pages,
+        start_idx=start_idx,
+        end_idx=end_idx,
+        total_products=total_products,
+        total_stock=total_stock,
+        stock_value=stock_value,
+        category_count=category_count,
+        low_stock_count=low_stock_count,
+        avg_margin=avg_margin
+    )
 
 
 @main_bp.route('/products/add', methods=['GET', 'POST'])
@@ -880,7 +1003,51 @@ def delete_offer(offer_id):
 @login_required
 @role_required('Admin')
 def users():
-    return render_template('users.html', users=storage.users)
+    query = request.args.get('q', '')
+    role_filter = request.args.get('role_id', type=int)
+    page = request.args.get('page', 1, type=int)
+
+    user_list = list(storage.users)
+    if query:
+        q = query.lower()
+        user_list = [u for u in user_list
+                     if q in (u.name or '').lower()
+                     or q in (u.email or '').lower()
+                     or q in (u.phone or '').lower()]
+    if role_filter:
+        user_list = [u for u in user_list if u.role_id == role_filter]
+
+    total_users = len(storage.users)
+    active_users = sum(1 for u in storage.users if u.active)
+    admin_count = sum(1 for u in storage.users if u.role and u.role.name == 'Admin')
+    manager_count = sum(1 for u in storage.users if u.role and u.role.name == 'Manager')
+    staff_count = sum(1 for u in storage.users if u.role and u.role.name not in ('Admin', 'Manager'))
+
+    roles = storage.roles
+
+    users_page, page, total_pages, total_items = paginate(user_list, page)
+    pages = pagination_pages(page, total_pages)
+    start_idx = (page - 1) * PER_PAGE + 1
+    end_idx = min(start_idx + len(users_page) - 1, total_items)
+
+    return render_template(
+        'users.html',
+        users=users_page,
+        roles=roles,
+        query=query,
+        role_filter=role_filter,
+        page=page,
+        total_pages=total_pages,
+        total_items=total_items,
+        pages=pages,
+        start_idx=start_idx,
+        end_idx=end_idx,
+        total_users=total_users,
+        active_users=active_users,
+        admin_count=admin_count,
+        manager_count=manager_count,
+        staff_count=staff_count
+    )
 
 
 @main_bp.route('/users/add', methods=['GET', 'POST'])
@@ -1039,14 +1206,80 @@ def analytics():
     sorted_months = sorted(monthly.keys())
     monthly_data = {m: monthly[m] for m in sorted_months}
 
-    return render_template('analytics.html', vendors=vendors, vendor_totals=vendor_totals, monthly_data=monthly_data)
+    total_purchased_val = sum(p.total_amount for p in purchases)
+    total_paid_val = sum(pmt.amount_paid for pmt in payments)
+    total_outstanding = total_purchased_val - total_paid_val
+    settlement_pct = round((total_paid_val / total_purchased_val * 100) if total_purchased_val else 0, 1)
+
+    return render_template(
+        'analytics.html',
+        vendors=vendors,
+        vendor_totals=vendor_totals,
+        monthly_data=monthly_data,
+        total_vendors=len(vendors),
+        total_purchased_val=total_purchased_val,
+        total_paid_val=total_paid_val,
+        total_outstanding=total_outstanding,
+        settlement_pct=settlement_pct
+    )
 
 
 @main_bp.route('/grn')
 @login_required
 def grn_list():
-    grns = sorted(storage.goods_received, key=lambda g: g.received_date or date.today(), reverse=True)
-    return render_template('grn_list.html', grns=grns)
+    query = request.args.get('q', '')
+    vendor_filter = request.args.get('vendor_id', type=int)
+    page = request.args.get('page', 1, type=int)
+
+    grn_list = list(storage.goods_received)
+    if query:
+        q = query.lower()
+        grn_list = [g for g in grn_list
+                    if q in (g.grn_number or '').lower()
+                    or q in (g.received_by or '').lower()
+                    or (g.purchase and q in (g.purchase.purchase_id or '').lower())
+                    or (g.purchase and g.purchase.vendor and q in g.purchase.vendor.vendor_name.lower())]
+    if vendor_filter:
+        grn_list = [g for g in grn_list if g.purchase and g.purchase.vendor_id == vendor_filter]
+
+    grn_list = sorted(grn_list, key=lambda g: g.received_date or date.today(), reverse=True)
+
+    total_grns = len(storage.goods_received)
+    total_qty = sum(g.received_qty for g in storage.goods_received)
+    today = date.today()
+    this_month = sum(1 for g in storage.goods_received
+                     if g.received_date and g.received_date.year == today.year and g.received_date.month == today.month)
+    vendor_count = len({g.purchase.vendor_id for g in storage.goods_received if g.purchase and g.purchase.vendor_id})
+    partial_count = sum(1 for g in storage.goods_received
+                        if g.purchase and g.received_qty < (g.purchase.quantity or 0))
+    ordered_total = sum(g.purchase.quantity or 0 for g in storage.goods_received if g.purchase)
+
+    vendors = sorted(storage.vendors, key=lambda v: v.vendor_name)
+
+    grns, page, total_pages, total_items = paginate(grn_list, page)
+    pages = pagination_pages(page, total_pages)
+    start_idx = (page - 1) * PER_PAGE + 1
+    end_idx = min(start_idx + len(grns) - 1, total_items)
+
+    return render_template(
+        'grn_list.html',
+        grns=grns,
+        vendors=vendors,
+        query=query,
+        vendor_filter=vendor_filter,
+        page=page,
+        total_pages=total_pages,
+        total_items=total_items,
+        pages=pages,
+        start_idx=start_idx,
+        end_idx=end_idx,
+        total_grns=total_grns,
+        total_qty=total_qty,
+        this_month=this_month,
+        vendor_count=vendor_count,
+        partial_count=partial_count,
+        ordered_total=ordered_total
+    )
 
 
 @main_bp.route('/grn/add', methods=['GET', 'POST'])
@@ -1072,8 +1305,64 @@ def add_grn():
 @main_bp.route('/invoices')
 @login_required
 def invoices():
-    purchases = sorted(storage.purchases, key=lambda p: p.purchase_date or date.today(), reverse=True)
-    return render_template('invoices.html', purchases=purchases)
+    query = request.args.get('q', '')
+    vendor_filter = request.args.get('vendor_id', type=int)
+    type_filter = request.args.get('type', '')
+    page = request.args.get('page', 1, type=int)
+
+    invoice_list = list(storage.purchases)
+    if query:
+        q = query.lower()
+        invoice_list = [p for p in invoice_list
+                        if q in (p.purchase_id or '').lower()
+                        or q in (p.brand_name or '').lower()
+                        or q in (p.model_name or '').lower()
+                        or (p.vendor and q in p.vendor.vendor_name.lower())]
+    if vendor_filter:
+        invoice_list = [p for p in invoice_list if p.vendor_id == vendor_filter]
+    if type_filter and type_filter != 'All':
+        invoice_list = [p for p in invoice_list if p.purchase_type == type_filter]
+
+    invoice_list = sorted(invoice_list, key=lambda p: p.purchase_date or date.today(), reverse=True)
+
+    total_invoices = len(storage.purchases)
+    invoiced_total = sum(p.total_amount for p in storage.purchases)
+    today = date.today()
+    this_month = sum(1 for p in storage.purchases
+                     if p.purchase_date and p.purchase_date.year == today.year and p.purchase_date.month == today.month)
+    vendor_count = len({p.vendor_id for p in storage.purchases if p.vendor_id})
+    avg_invoice = round(invoiced_total / total_invoices) if total_invoices else 0
+    purchase_type_list = sorted({p.purchase_type for p in storage.purchases})
+    purchase_types = len(purchase_type_list)
+
+    vendors = sorted(storage.vendors, key=lambda v: v.vendor_name)
+
+    invoices_page, page, total_pages, total_items = paginate(invoice_list, page)
+    pages = pagination_pages(page, total_pages)
+    start_idx = (page - 1) * PER_PAGE + 1
+    end_idx = min(start_idx + len(invoices_page) - 1, total_items)
+
+    return render_template(
+        'invoices.html',
+        purchases=invoices_page,
+        vendors=vendors,
+        query=query,
+        vendor_filter=vendor_filter,
+        type_filter=type_filter,
+        purchase_type_list=purchase_type_list,
+        page=page,
+        total_pages=total_pages,
+        total_items=total_items,
+        pages=pages,
+        start_idx=start_idx,
+        end_idx=end_idx,
+        total_invoices=total_invoices,
+        invoiced_total=invoiced_total,
+        this_month=this_month,
+        vendor_count=vendor_count,
+        avg_invoice=avg_invoice,
+        purchase_types=purchase_types
+    )
 
 
 @main_bp.route('/invoices/<int:purchase_id>')
