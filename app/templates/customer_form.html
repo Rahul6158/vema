@@ -1,0 +1,68 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="form-page-wrapper">
+
+  <!-- Page Header -->
+  <div class="form-page-header">
+    <div>
+      <h1 class="form-page-title">{{ 'Edit Customer Record' if customer else 'Add New Customer' }}</h1>
+      <p class="form-page-subtitle">Record customer contact details, phone numbers, and delivery location.</p>
+    </div>
+    <a href="{{ url_for('main.customers') }}" class="btn-form-cancel">← Back to Customers</a>
+  </div>
+
+  <form method="POST">
+    <div class="form-page-card mb-3">
+      <div class="form-section-header">
+        <p class="form-section-title">👤 Contact Information</p>
+      </div>
+      <div class="form-section-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Full Name <span class="req">*</span></label>
+            <input type="text" class="form-control" name="name"
+                   value="{{ customer.name if customer else '' }}" required placeholder="e.g. Ramesh Kumar">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Phone Number <span class="req">*</span></label>
+            <input type="tel" class="form-control font-mono" name="phone"
+                   value="{{ customer.phone if customer else '' }}" required placeholder="+91 9876543210">
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-control font-mono" name="email"
+                   value="{{ customer.email if customer else '' }}" placeholder="customer@example.com">
+          </div>
+        </div>
+      </div>
+
+      <hr class="form-section-divider">
+
+      <div class="form-section-header">
+        <p class="form-section-title">📍 Location</p>
+      </div>
+      <div class="form-section-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Town / City</label>
+            <input type="text" class="form-control" name="town"
+                   value="{{ customer.town if customer else '' }}" placeholder="e.g. Nashik">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">District / Region</label>
+            <input type="text" class="form-control" name="district"
+                   value="{{ customer.district if customer else '' }}" placeholder="e.g. Maharashtra">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="form-action-bar form-page-card" style="border-radius: 16px;">
+      <a href="{{ url_for('main.customers') }}" class="btn-form-cancel">Cancel</a>
+      <button type="submit" class="btn-form-primary">Save Customer</button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

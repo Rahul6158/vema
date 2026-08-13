@@ -1,0 +1,563 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid px-0">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-1">Purchase Track</h1>
+      <p class="text-muted small mb-0">Record, manage, and track complete purchase records, customer information, documents, and invoices.</p>
+    </div>
+    <div>
+      <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span>Back to Dashboard</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Purchase Track Form Card -->
+  <div class="card border shadow-sm mb-5">
+    <div class="card-header bg-white py-3 border-bottom">
+      <h5 class="card-title fw-bold mb-0 text-dark">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" class="me-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        New Purchase Entry Form
+      </h5>
+    </div>
+    <div class="card-body p-4">
+      <form id="purchaseTrackForm" method="POST" action="{{ url_for('main.purchase_track_save') }}" enctype="multipart/form-data">
+        
+        <!-- Customer Information Section -->
+        <h6 class="text-uppercase text-orange fw-bold mb-3 small tracking-wider border-bottom pb-2">1. Customer Information</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label for="customer_name" class="form-label fw-semibold small">Customer Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="customer_name" name="customer_name" placeholder="e.g. Rajesh Kumar" required>
+          </div>
+          <div class="col-md-4">
+            <label for="phone_number" class="form-label fw-semibold small">Phone Number <span class="text-danger">*</span></label>
+            <input type="tel" class="form-control" id="phone_number" name="phone_number" placeholder="e.g. 9876543210" pattern="[0-9]{10,15}" title="Please enter a valid phone number (10-15 digits)" required>
+          </div>
+          <div class="col-md-4">
+            <label for="email" class="form-label fw-semibold small">Email ID</label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="e.g. customer@example.com">
+          </div>
+        </div>
+
+        <!-- Product Information Section -->
+        <h6 class="text-uppercase text-orange fw-bold mb-3 small tracking-wider border-bottom pb-2">2. Product & Pricing Information</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-3">
+            <label for="product_type" class="form-label fw-semibold small">Product Type <span class="text-danger">*</span></label>
+            <select class="form-select" id="product_type" name="product_type" required>
+              <option value="Retail">Retail</option>
+              <option value="Wholesale">Wholesale</option>
+              <option value="Both">Both</option>
+              {% for pt in product_types %}
+                {% if pt not in ['Retail', 'Wholesale', 'Both'] %}
+                  <option value="{{ pt }}">{{ pt }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label for="brand" class="form-label fw-semibold small">Brand <span class="text-danger">*</span></label>
+            <input list="brandsList" class="form-control" id="brand" name="brand" placeholder="e.g. Crompton" required>
+            <datalist id="brandsList">
+              {% for b in brands %}
+                <option value="{{ b }}">
+              {% endfor %}
+            </datalist>
+          </div>
+
+          <div class="col-md-3">
+            <label for="model_name" class="form-label fw-semibold small">Model Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="model_name" name="model_name" placeholder="e.g. CF-1200 Ceiling Fan" required>
+          </div>
+
+          <div class="col-md-3">
+            <label for="sale_type" class="form-label fw-semibold small">Sale Type <span class="text-danger">*</span></label>
+            <select class="form-select" id="sale_type" name="sale_type" required>
+              <option value="Retail" selected>Retail</option>
+              <option value="Wholesale">Wholesale</option>
+              <option value="Both">Both</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label for="quantity" class="form-label fw-semibold small">Quantity <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="quantity" name="quantity" min="1" value="1" required>
+          </div>
+
+          <div class="col-md-3">
+            <label for="price" class="form-label fw-semibold small">Price (Unit) ₹ <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" value="0.00" required>
+          </div>
+
+          <div class="col-md-3">
+            <label for="total_price" class="form-label fw-semibold small">Total Price ₹ (Auto-calculated)</label>
+            <input type="number" class="form-control font-mono fw-bold text-success" id="total_price" name="total_price" min="0" step="0.01" value="0.00">
+            <small class="text-muted" style="font-size: 0.7rem;">Quantity × Price (Editable)</small>
+          </div>
+
+          <div class="col-md-3">
+            <label for="purchase_date" class="form-label fw-semibold small">Purchase Date</label>
+            <input type="date" class="form-control" id="purchase_date" name="purchase_date">
+          </div>
+        </div>
+
+        <!-- Purchase Documents Section -->
+        <h6 class="text-uppercase text-orange fw-bold mb-3 small tracking-wider border-bottom pb-2">3. Purchase Documents & Attachments</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label for="invoice" class="form-label fw-semibold small">Upload Invoice File</label>
+            <input type="file" class="form-control" id="invoice" name="invoice" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx">
+            <small class="text-muted">Supported formats: PDF, Images (JPG, PNG), Word, Excel</small>
+          </div>
+          <div class="col-md-6">
+            <label for="attachment" class="form-label fw-semibold small">Upload Supporting Attachment</label>
+            <input type="file" class="form-control" id="attachment" name="attachment" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx">
+            <small class="text-muted">Warranty card, specification sheet, or receipt</small>
+          </div>
+        </div>
+
+        <!-- Form Buttons -->
+        <div class="d-flex justify-content-end align-items-center gap-3 pt-3 border-top">
+          <button type="button" id="whatsappShareBtn" class="btn btn-success d-inline-flex align-items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            <span>WhatsApp</span>
+          </button>
+          <button type="submit" class="btn btn-orange-primary px-4 d-inline-flex align-items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span>Save Purchase</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Purchase History Table Card -->
+  <div class="card border shadow-sm">
+    <div class="card-header bg-white py-3 border-bottom">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="card-title fw-bold mb-0 text-dark">Purchase History</h5>
+        <span class="badge bg-light text-dark font-mono">{{ total_count }} Record(s)</span>
+      </div>
+
+      <!-- Filter Controls for Table -->
+      <form method="GET" action="{{ url_for('main.purchase_track') }}" class="row g-2 mt-2 align-items-center">
+        <div class="col-md-3">
+          <input type="text" name="q" class="form-control form-control-sm" placeholder="Search customer, model, phone..." value="{{ query }}">
+        </div>
+
+        <div class="col-md-2">
+          <select name="sale_type" class="form-select form-select-sm">
+            <option value="All" {% if sale_type_filter == 'All' or not sale_type_filter %}selected{% endif %}>Sale Type: All</option>
+            <option value="Wholesale" {% if sale_type_filter == 'Wholesale' %}selected{% endif %}>Wholesale</option>
+            <option value="Retail" {% if sale_type_filter == 'Retail' %}selected{% endif %}>Retail</option>
+            <option value="Both" {% if sale_type_filter == 'Both' %}selected{% endif %}>Both</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <select name="brand" class="form-select form-select-sm">
+            <option value="All" {% if brand_filter == 'All' or not brand_filter %}selected{% endif %}>Brand: All</option>
+            {% for b in brands %}
+              <option value="{{ b }}" {% if brand_filter == b %}selected{% endif %}>{{ b }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <select name="product_type" class="form-select form-select-sm">
+            <option value="All" {% if product_filter == 'All' or not product_filter %}selected{% endif %}>Product: All</option>
+            {% for pt in product_types %}
+              <option value="{{ pt }}" {% if product_filter == pt %}selected{% endif %}>{{ pt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 d-flex gap-2">
+          <input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date_filter }}" title="Start Date">
+          <input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date_filter }}" title="End Date">
+          <button type="submit" class="btn btn-sm btn-orange-primary">Filter</button>
+          <a href="{{ url_for('main.purchase_track') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+        </div>
+      </form>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Customer Name</th>
+            <th>Phone</th>
+            <th>Product</th>
+            <th>Brand</th>
+            <th>Model</th>
+            <th class="text-center">Qty</th>
+            <th class="text-end">Price</th>
+            <th class="text-end">Total Price</th>
+            <th class="text-center">Sale Type</th>
+            <th class="text-center">Docs</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in purchases %}
+          <tr>
+            <td class="fw-bold font-mono text-orange">{{ p.purchase_id }}</td>
+            <td class="text-muted small">{{ p.purchase_date.strftime('%d %b %Y') if p.purchase_date else '' }}</td>
+            <td class="fw-semibold text-dark">{{ p.customer_name or (p.customer.name if p.customer else 'N/A') }}</td>
+            <td class="font-mono text-muted small">{{ p.phone_number or (p.customer.phone if p.customer else '-') }}</td>
+            <td><span class="badge bg-light text-secondary">{{ p.product_type or 'Retail' }}</span></td>
+            <td class="fw-semibold text-dark">{{ p.brand_name or p.brand or '-' }}</td>
+            <td>{{ p.model_name or '-' }}</td>
+            <td class="text-center fw-bold">{{ p.quantity }}</td>
+            <td class="text-end font-mono">₹{{ "{:,.2f}".format(p.unit_price) }}</td>
+            <td class="text-end font-mono fw-bold text-success">₹{{ "{:,.2f}".format(p.total_amount) }}</td>
+            <td class="text-center">
+              {% if p.sale_type == 'Wholesale' %}
+                <span class="badge bg-primary-subtle text-primary">Wholesale</span>
+              {% elif p.sale_type == 'Retail' %}
+                <span class="badge bg-info-subtle text-info">Retail</span>
+              {% else %}
+                <span class="badge bg-warning-subtle text-warning">Both</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <div class="d-flex justify-content-center gap-1">
+                {% if p.invoice %}
+                  <a href="{{ url_for('main.uploaded_file', filename=p.invoice) }}" target="_blank" class="badge bg-danger-subtle text-danger text-decoration-none" title="View Invoice">Invoice</a>
+                {% endif %}
+                {% if p.attachment %}
+                  <a href="{{ url_for('main.uploaded_file', filename=p.attachment) }}" target="_blank" class="badge bg-secondary-subtle text-secondary text-decoration-none" title="View Attachment">Doc</a>
+                {% endif %}
+                {% if not p.invoice and not p.attachment %}
+                  <span class="text-muted small">-</span>
+                {% endif %}
+              </div>
+            </td>
+            <td class="text-center">
+              <div class="d-flex justify-content-center gap-1">
+                <!-- View Button -->
+                <button type="button" class="btn btn-sm btn-outline-info p-1 px-2 view-purchase-btn" data-id="{{ p.id }}" title="View Purchase">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+                <!-- Edit Button -->
+                <button type="button" class="btn btn-sm btn-outline-primary p-1 px-2 edit-purchase-btn" data-id="{{ p.id }}" title="Edit Purchase">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <!-- WhatsApp Share -->
+                <button type="button" class="btn btn-sm btn-outline-success p-1 px-2 row-wa-btn" 
+                        data-cname="{{ p.customer_name }}"
+                        data-phone="{{ p.phone_number }}"
+                        data-ptype="{{ p.product_type }}"
+                        data-brand="{{ p.brand_name }}"
+                        data-model="{{ p.model_name }}"
+                        data-qty="{{ p.quantity }}"
+                        data-price="{{ p.unit_price }}"
+                        data-total="{{ p.total_amount }}"
+                        data-stype="{{ p.sale_type }}"
+                        title="Share on WhatsApp">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                </button>
+                <!-- Delete Button -->
+                <form method="POST" action="{{ url_for('main.purchase_track_delete', purchase_id=p.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this purchase record?');">
+                  <button type="submit" class="btn btn-sm btn-outline-danger p-1 px-2" title="Delete Purchase">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="13" class="text-center text-muted py-4">No purchase records found matching criteria.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    {% if total_pages > 1 %}
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+      <div class="text-muted small">Showing page {{ page }} of {{ total_pages }} ({{ total_count }} records)</div>
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('main.purchase_track', page=page-1, q=query, sale_type=sale_type_filter, brand=brand_filter, product_type=product_filter, start_date=start_date_filter, end_date=end_date_filter) }}">Previous</a>
+        </li>
+        {% for pno in page_numbers %}
+          {% if pno is none %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% else %}
+            <li class="page-item {% if pno == page %}active{% endif %}">
+              <a class="page-link" href="{{ url_for('main.purchase_track', page=pno, q=query, sale_type=sale_type_filter, brand=brand_filter, product_type=product_filter, start_date=start_date_filter, end_date=end_date_filter) }}">{{ pno }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('main.purchase_track', page=page+1, q=query, sale_type=sale_type_filter, brand=brand_filter, product_type=product_filter, start_date=start_date_filter, end_date=end_date_filter) }}">Next</a>
+        </li>
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- View Purchase Modal -->
+<div class="modal fade" id="viewPurchaseModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title fw-bold" id="viewModalTitle">Purchase Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="viewModalBody">
+        <div class="text-center py-4"><div class="spinner-border text-orange" role="status"></div></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Purchase Modal -->
+<div class="modal fade" id="editPurchaseModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title fw-bold">Edit Purchase Record</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="editPurchaseForm" method="POST" enctype="multipart/form-data">
+        <div class="modal-body" id="editModalBody">
+          <div class="text-center py-4"><div class="spinner-border text-orange" role="status"></div></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-orange-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const qtyInput = document.getElementById('quantity');
+    const priceInput = document.getElementById('price');
+    const totalInput = document.getElementById('total_price');
+
+    // Automatic calculation Total Price = Quantity * Price
+    function calcTotal() {
+        const qty = parseFloat(qtyInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        totalInput.value = (qty * price).toFixed(2);
+    }
+
+    qtyInput.addEventListener('input', calcTotal);
+    priceInput.addEventListener('input', calcTotal);
+
+    // Set today's date by default if empty
+    const dateInput = document.getElementById('purchase_date');
+    if (dateInput && !dateInput.value) {
+        dateInput.valueAsDate = new Date();
+    }
+
+    // Helper function to build WhatsApp click-to-chat URL
+    function openWhatsAppUrl(data) {
+        let phone = (data.phone || '').replace(/[^0-9]/g, '');
+        if (phone.length === 10) {
+            phone = '91' + phone; // Default to India country code if 10 digits
+        }
+
+        const msg = 
+`Customer Name: ${data.cname || '-'}
+Phone: ${data.phone || '-'}
+Product: ${data.ptype || '-'}
+Brand: ${data.brand || '-'}
+Model: ${data.model || '-'}
+Quantity: ${data.qty || 1}
+Price: ₹${data.price || 0}
+Total Price: ₹${data.total || 0}
+Sale Type: ${data.stype || '-'}`;
+
+        const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+    }
+
+    // Form WhatsApp Button
+    document.getElementById('whatsappShareBtn').addEventListener('click', function() {
+        const cname = document.getElementById('customer_name').value.trim();
+        const phone = document.getElementById('phone_number').value.trim();
+        const ptype = document.getElementById('product_type').value;
+        const brand = document.getElementById('brand').value.trim();
+        const model = document.getElementById('model_name').value.trim();
+        const qty = document.getElementById('quantity').value;
+        const price = document.getElementById('price').value;
+        const total = document.getElementById('total_price').value;
+        const stype = document.getElementById('sale_type').value;
+
+        if (!cname || !phone) {
+            alert('Please enter Customer Name and Phone Number first to generate WhatsApp share message.');
+            return;
+        }
+
+        openWhatsAppUrl({ cname, phone, ptype, brand, model, qty, price, total, stype });
+    });
+
+    // Row WhatsApp Buttons in Table
+    document.querySelectorAll('.row-wa-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            openWhatsAppUrl({
+                cname: this.dataset.cname,
+                phone: this.dataset.phone,
+                ptype: this.dataset.ptype,
+                brand: this.dataset.brand,
+                model: this.dataset.model,
+                qty: this.dataset.qty,
+                price: this.dataset.price,
+                total: this.dataset.total,
+                stype: this.dataset.stype
+            });
+        });
+    });
+
+    // View Purchase Modal Handler
+    document.querySelectorAll('.view-purchase-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const pid = this.dataset.id;
+            const modal = new bootstrap.Modal(document.getElementById('viewPurchaseModal'));
+            const modalBody = document.getElementById('viewModalBody');
+            modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-orange" role="status"></div></div>';
+            modal.show();
+
+            fetch(`/api/purchases/${pid}`)
+                .then(res => res.json())
+                .then(data => {
+                    modalBody.innerHTML = `
+                        <div class="row g-3">
+                            <div class="col-md-6"><strong>Purchase ID:</strong> <span class="text-orange font-mono">${data.purchase_id}</span></div>
+                            <div class="col-md-6"><strong>Date:</strong> ${data.purchase_date || '-'}</div>
+                            <div class="col-md-6"><strong>Customer Name:</strong> ${data.customer_name || '-'}</div>
+                            <div class="col-md-6"><strong>Phone Number:</strong> ${data.phone_number || '-'}</div>
+                            <div class="col-md-6"><strong>Email ID:</strong> ${data.email || '-'}</div>
+                            <div class="col-md-6"><strong>Product Type:</strong> ${data.product_type || '-'}</div>
+                            <div class="col-md-6"><strong>Brand:</strong> ${data.brand_name || '-'}</div>
+                            <div class="col-md-6"><strong>Model Name:</strong> ${data.model_name || '-'}</div>
+                            <div class="col-md-6"><strong>Quantity:</strong> ${data.quantity}</div>
+                            <div class="col-md-6"><strong>Price:</strong> ₹${Number(data.unit_price).toFixed(2)}</div>
+                            <div class="col-md-6"><strong>Total Price:</strong> <span class="text-success fw-bold">₹${Number(data.total_amount).toFixed(2)}</span></div>
+                            <div class="col-md-6"><strong>Sale Type:</strong> <span class="badge bg-primary-subtle text-primary">${data.sale_type}</span></div>
+                            <div class="col-md-6">
+                                <strong>Invoice Document:</strong><br>
+                                ${data.invoice ? `<a href="/uploads/${data.invoice}" target="_blank" class="btn btn-sm btn-outline-danger mt-1">📄 View Invoice</a>` : '<span class="text-muted">No Invoice Attached</span>'}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Supporting Attachment:</strong><br>
+                                ${data.attachment ? `<a href="/uploads/${data.attachment}" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">📎 View Attachment</a>` : '<span class="text-muted">No Attachment</span>'}
+                            </div>
+                        </div>
+                    `;
+                })
+                .catch(err => {
+                    modalBody.innerHTML = '<div class="alert alert-danger">Failed to load purchase details.</div>';
+                });
+        });
+    });
+
+    // Edit Purchase Modal Handler
+    document.querySelectorAll('.edit-purchase-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const pid = this.dataset.id;
+            const modal = new bootstrap.Modal(document.getElementById('editPurchaseModal'));
+            const modalBody = document.getElementById('editModalBody');
+            const editForm = document.getElementById('editPurchaseForm');
+            editForm.action = `/purchases/track/${pid}/edit`;
+            modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-orange" role="status"></div></div>';
+            modal.show();
+
+            fetch(`/api/purchases/${pid}`)
+                .then(res => res.json())
+                .then(data => {
+                    modalBody.innerHTML = `
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Customer Name</label>
+                                <input type="text" class="form-control form-control-sm" name="customer_name" value="${data.customer_name || ''}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Phone Number</label>
+                                <input type="tel" class="form-control form-control-sm" name="phone_number" value="${data.phone_number || ''}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email ID</label>
+                                <input type="email" class="form-control form-control-sm" name="email" value="${data.email || ''}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Product Type</label>
+                                <input type="text" class="form-control form-control-sm" name="product_type" value="${data.product_type || 'Retail'}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Brand</label>
+                                <input type="text" class="form-control form-control-sm" name="brand" value="${data.brand_name || ''}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Model Name</label>
+                                <input type="text" class="form-control form-control-sm" name="model_name" value="${data.model_name || ''}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Quantity</label>
+                                <input type="number" class="form-control form-control-sm" id="edit_qty" name="quantity" min="1" value="${data.quantity}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Price ₹</label>
+                                <input type="number" step="0.01" class="form-control form-control-sm" id="edit_price" name="price" value="${data.unit_price}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Total Price ₹</label>
+                                <input type="number" step="0.01" class="form-control form-control-sm fw-bold text-success" id="edit_total" name="total_price" value="${data.total_amount}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Sale Type</label>
+                                <select class="form-select form-select-sm" name="sale_type">
+                                    <option value="Retail" ${data.sale_type === 'Retail' ? 'selected' : ''}>Retail</option>
+                                    <option value="Wholesale" ${data.sale_type === 'Wholesale' ? 'selected' : ''}>Wholesale</option>
+                                    <option value="Both" ${data.sale_type === 'Both' ? 'selected' : ''}>Both</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Upload New Invoice (Optional)</label>
+                                <input type="file" class="form-control form-control-sm" name="invoice">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Upload New Attachment (Optional)</label>
+                                <input type="file" class="form-control form-control-sm" name="attachment">
+                            </div>
+                        </div>
+                    `;
+
+                    const eq = document.getElementById('edit_qty');
+                    const ep = document.getElementById('edit_price');
+                    const et = document.getElementById('edit_total');
+                    function updateEditTotal() {
+                        const q = parseFloat(eq.value) || 0;
+                        const p = parseFloat(ep.value) || 0;
+                        et.value = (q * p).toFixed(2);
+                    }
+                    eq.addEventListener('input', updateEditTotal);
+                    ep.addEventListener('input', updateEditTotal);
+                })
+                .catch(err => {
+                    modalBody.innerHTML = '<div class="alert alert-danger">Failed to load purchase form.</div>';
+                });
+        });
+    });
+});
+</script>
+{% endblock %}

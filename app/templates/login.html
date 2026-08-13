@@ -1,0 +1,120 @@
+{% extends 'layout.html' %}
+{% block unauth_content %}
+<div class="login-split-wrapper d-flex align-items-stretch">
+  <div class="container-fluid p-0">
+    <div class="row g-0 min-vh-100">
+      
+      <!-- Left Column: Orange Brand Banner (Desktop/Tablet) -->
+      <div class="col-lg-6 col-md-5 login-left-banner d-none d-md-flex">
+        <!-- Top Header -->
+        <div class="z-2">
+          <h2 class="display-6 fw-bold text-white mb-0" style="letter-spacing: -0.02em;" id="bannerTitle">Welcome to</h2>
+        </div>
+
+        <!-- Center Logo & Tagline -->
+        <div class="my-auto text-center py-4 z-2 position-relative">
+          <div class="mb-4">
+            <img src="{{ url_for('static', filename='vema-logo.png') }}" alt="VEMA Logo" style="max-height: 140px; width: auto; filter: brightness(0) invert(1);" class="img-fluid">
+          </div>
+          <p class="lead text-white max-w-md mx-auto" id="bannerSubtitle" style="max-width: 460px; font-size: 1.15rem; line-height: 1.6; opacity: 0.95;">
+            With the trust of hundreds of vendors, VEMA delivers seamless vendor management, purchase tracking & payment reconciliation.
+          </p>
+        </div>
+
+        <!-- Bottom Footer -->
+        <div class="z-2">
+          <p class="small text-white-50 mb-0 font-mono" style="font-size: 0.8rem;">Developed by VEMA Technologies PLC</p>
+        </div>
+
+        <!-- Scalloped Curved White Divider SVG -->
+        <div class="scallop-divider-container d-none d-md-block">
+          <svg viewBox="0 0 100 1200" preserveAspectRatio="none">
+            <path d="M 0,0 C 70,150 20,300 75,450 C 110,600 35,750 85,900 C 40,1050 90,1150 100,1200 L 100,1200 L 100,0 Z" fill="#ffffff"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Right Column: Animated Dual-Form Auth Switcher -->
+      <div class="col-lg-6 col-md-7 d-flex align-items-center justify-content-center bg-white p-4 p-md-5">
+        <div class="w-100" style="max-width: 430px;">
+          
+          <!-- Mobile Brand Logo Header -->
+          <div class="text-center mb-4 d-md-none">
+            <img src="{{ url_for('static', filename='vema-logo.png') }}" alt="VEMA Logo" style="height: 52px; width: auto; object-fit: contain;" class="img-fluid mb-2">
+          </div>
+
+          <!-- Inline Flashed Alert Notification -->
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, msg in messages %}
+                <div class="auth-alert-banner alert-{{ category }}">
+                  <svg class="alert-svg-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>{{ msg }}</span>
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+
+          <!-- Animated Form Container -->
+          <div class="auth-form-container">
+            
+            <!-- PANEL 1: LOG IN FORM -->
+            <div class="auth-form-panel panel-active" id="loginPanel">
+              <div class="mb-4">
+                <h1 class="fw-extrabold mb-1" style="color: #ea580c; font-size: 2.1rem; letter-spacing: -0.03em;">Log in</h1>
+                <p class="text-muted small">Please fill in your credentials to login.</p>
+              </div>
+
+              <form method="POST" action="{{ url_for('auth.login') }}">
+                <div class="mb-4 position-relative">
+                  <input type="email" name="email" id="loginEmail" class="form-control-minimal" placeholder="EMP123456 or admin@example.com" required autocomplete="email">
+                </div>
+
+                <div class="mb-4 position-relative">
+                  <input type="password" name="password" id="loginPassword" class="form-control-minimal" placeholder="Password" required autocomplete="current-password">
+                  <button type="button" class="btn-toggle-password" onclick="togglePasswordVisibility('loginPassword', 'eyeIconLogin')" aria-label="Toggle password">
+                    <svg id="eyeIconLogin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <div class="form-check">
+                    <input class="form-check-input custom-orange-checkbox" type="checkbox" id="rememberMe" name="remember">
+                    <label class="form-check-label fw-medium small" for="rememberMe" style="color: #ea580c; cursor: pointer;">Remember Me</label>
+                  </div>
+                  <a href="/forgot-password" class="text-decoration-none small text-muted">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn btn-login-orange w-100 py-3 fs-6 mb-3">Log in</button>
+              </form>
+            </div>
+
+          </div>
+
+          <!-- Bottom Disclaimer -->
+          <div class="text-center mt-4">
+            <small class="text-muted" style="font-size: 0.78rem; opacity: 0.75;">*Do not share your login credentials with anyone.</small>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function togglePasswordVisibility(inputId, iconId) {
+    const passwordInput = document.getElementById(inputId);
+    const eyeIcon = document.getElementById(iconId);
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+    } else {
+        passwordInput.type = 'password';
+        eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+    }
+}
+</script>
+{% endblock unauth_content %}

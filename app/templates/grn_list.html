@@ -1,0 +1,273 @@
+{% extends "layout.html" %}
+
+{% block page_title %}Goods Received Notes (GRN){% endblock %}
+{% block page_subtitle %}Track physical delivery, quantity received, condition notes, and receiving staff.{% endblock %}
+
+{% block content %}
+
+<!-- Page Header Bar -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h3 fw-bold text-dark mb-1">Goods Received Notes (GRN)</h1>
+    <p class="text-muted small mb-0">Track physical delivery, quantity received, condition notes, and receiving staff.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      <span>Back to Dashboard</span>
+    </a>
+    <a href="{{ url_for('main.add_grn') }}" class="btn btn-orange-primary btn-sm d-inline-flex align-items-center gap-1">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>+ Record Goods Received</span>
+    </a>
+  </div>
+</div>
+
+<!-- 5 Top Metric KPI Row -->
+<div class="row g-3 mb-4">
+  <!-- Card 1: TOTAL GRN RECORDS (Orange Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-orange">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">TOTAL GRN RECORDS</div>
+          <div class="kpi-value-num">{{ total_grns }}</div>
+          <div class="kpi-trend-green mt-1">↑ {{ this_month }} this month</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: UNITS RECEIVED (Blue Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-blue">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">UNITS RECEIVED</div>
+          <div class="kpi-value-num">{{ total_qty }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">Across all GRNs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: VENDORS SERVED (Green Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-green">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">VENDORS SERVED</div>
+          <div class="kpi-value-num">{{ vendor_count }}</div>
+          <div class="kpi-trend-green mt-1">Deliveries received</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4: PARTIAL DELIVERIES (Amber Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-amber">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">PARTIAL DELIVERIES</div>
+          <div class="kpi-value-num">{{ partial_count }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">Needs follow-up</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 5: TOTAL QUANTITY ORDERED (Violet Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-violet">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 21 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">TOTAL UNITS ORDERED</div>
+          <div class="kpi-value-num">{{ ordered_total }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">Linked to GRNs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Table Card with Search & Clean Inline Filters (Fixed Height Container) -->
+<div class="card-clean mb-4" style="min-height: 520px; display: flex; flex-direction: column; justify-content: space-between;">
+  <div class="p-3 border-bottom">
+    <form method="GET" action="{{ url_for('main.grn_list') }}" class="row g-2 align-items-center">
+      <!-- 1. Search Box -->
+      <div class="col-xl-4 col-md-4">
+        <div class="header-search-box w-100" style="background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; height: 38px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" name="q" placeholder="Search GRN no., PO code, vendor..." value="{{ query }}">
+        </div>
+      </div>
+
+      <!-- 2. Vendor Select -->
+      <div class="col-xl-2 col-md-2">
+        <select name="vendor_id" class="filter-select-clean font-mono w-100" style="height: 38px;" onchange="this.form.submit()">
+          <option value="">Vendor: All</option>
+          {% for v in vendors %}
+            <option value="{{ v.id }}" {% if vendor_filter == v.id %}selected{% endif %}>{{ v.vendor_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- 3. Action Buttons -->
+      <div class="col-xl-6 col-md-6 d-flex justify-content-end gap-2 ms-auto">
+        <button type="submit" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1 font-mono text-nowrap" style="height: 38px; border-radius: 8px; font-size: 0.78rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          <span>Filter</span>
+        </button>
+        <a href="{{ url_for('main.add_grn') }}" class="btn btn-orange-primary text-nowrap d-inline-flex align-items-center gap-1" style="height: 38px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Record Goods Receipt</span>
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table table-clean table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>GRN No.</th>
+          <th>PO Code</th>
+          <th>Vendor</th>
+          <th class="text-center">Received Qty</th>
+          <th>Received Date</th>
+          <th>Received By</th>
+          <th>Condition / Notes</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for g in grns %}
+        <tr>
+          <td>
+            <div class="fw-bold font-mono text-dark">{{ g.grn_number }}</div>
+            {% if g.purchase %}
+              {% set is_partial = g.received_qty < (g.purchase.quantity or 0) %}
+              {% if is_partial %}
+                <span class="badge" style="background-color: #ffedd5; color: #c2410c; font-weight: 700; padding: 0.22em 0.7em; border-radius: 999px; font-size: 0.66rem;">Partial</span>
+              {% else %}
+                <span class="badge" style="background-color: #dcfce7; color: #15803d; font-weight: 700; padding: 0.22em 0.7em; border-radius: 999px; font-size: 0.66rem;">Complete</span>
+              {% endif %}
+            {% endif %}
+          </td>
+          <td>
+            {% if g.purchase %}
+              <a href="{{ url_for('main.view_purchase', purchase_id=g.purchase.id) }}" class="font-mono text-decoration-none fw-bold text-primary">
+                {{ g.purchase.purchase_id }}
+              </a>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if g.purchase and g.purchase.vendor %}
+              {% set v = g.purchase.vendor %}
+              <div class="d-flex align-items-center gap-2">
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold font-mono" style="width: 30px; height: 30px; background-color: #fff7ed; color: #ea580c; font-size: 0.7rem; border: 1px solid #fed7aa; flex-shrink: 0;">{{ v.vendor_name[:2].upper() }}</div>
+                <a href="{{ url_for('main.vendor_detail', vendor_id=v.id) }}" class="vendor-name-text text-decoration-none">{{ v.vendor_name }}</a>
+              </div>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <div class="fw-bold font-mono text-dark">{{ g.received_qty }}</div>
+            <div class="text-muted small" style="font-size: 0.7rem;">of {{ g.purchase.quantity if g.purchase else '—' }}</div>
+          </td>
+          <td class="font-mono small text-muted">{{ g.received_date.strftime('%d %b %Y') if g.received_date else '—' }}</td>
+          <td class="small">{{ g.received_by or 'Staff' }}</td>
+          <td>
+            {% set notes = g.condition_notes or 'Good condition' %}
+            {% set amber_note = 'damage' in notes|lower or 'partial' in notes|lower or 'short' in notes|lower %}
+            <span class="d-inline-flex align-items-center gap-1 text-wrap" style="font-size: 0.78rem; color: #475569; max-width: 200px;">
+              <span class="rounded-circle flex-shrink-0" style="width: 6px; height: 6px; background-color: {% if amber_note %} #f59e0b {% else %} #22c55e {% endif %};"></span>
+              {{ notes }}
+            </span>
+          </td>
+          <td class="text-end">
+            {% if g.purchase %}
+              <a href="{{ url_for('main.view_purchase', purchase_id=g.purchase.id) }}" class="btn-icon-action" title="View Purchase Order">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center py-5 text-muted">
+            <div class="d-flex justify-content-center mb-2">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+            </div>
+            <div>No goods received notes found.</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer Pagination (Fixed at Bottom) -->
+  <div class="card-table-footer-fixed" style="font-size: 0.78rem;">
+    <div class="text-muted">
+      {% if total_items %}
+        Showing {{ start_idx }} to {{ end_idx }} of {{ total_items }} entries
+      {% else %}
+        No entries found
+      {% endif %}
+    </div>
+    {% if total_pages > 1 %}
+    <div class="d-flex align-items-center gap-1">
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page <= 1 %}disabled{% endif %}" href="{{ url_for('main.grn_list', q=query, vendor_id=vendor_filter, page=page-1) if page > 1 else '#' }}">&lt;</a>
+      {% for pno in pages %}
+        {% if pno is none %}
+          <span class="text-muted px-1">...</span>
+        {% else %}
+          <a class="btn btn-sm {% if pno == page %}btn-orange-primary{% else %}btn-light border{% endif %} p-1 px-2" href="{{ url_for('main.grn_list', q=query, vendor_id=vendor_filter, page=pno) }}">{{ pno }}</a>
+        {% endif %}
+      {% endfor %}
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page >= total_pages %}disabled{% endif %}" href="{{ url_for('main.grn_list', q=query, vendor_id=vendor_filter, page=page+1) if page < total_pages else '#' }}">&gt;</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+.btn-icon-action {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.btn-icon-action:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+</style>
+{% endblock %}

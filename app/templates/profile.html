@@ -1,0 +1,118 @@
+{% extends "layout.html" %}
+
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}Your account information.{% endblock %}
+
+{% block content %}
+<style>
+  .profile-page { max-width: 860px; overflow-x: hidden; }
+
+  .profile-page .form-section-header { position: relative; padding: 1rem 1.4rem 0.85rem; background: #ffffff; overflow: hidden; }
+  .profile-page .form-section-header::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #ea580c; }
+  .profile-page .form-section-title { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #334155; display: flex; align-items: center; margin: 0; }
+
+  .profile-page .form-page-card .form-label { font-size: 0.76rem; font-weight: 700; color: #475569; margin-bottom: 0.4rem; }
+
+  .profile-page .form-page-card .form-control,
+  .profile-page .form-page-card .form-select {
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    height: 44px;
+    padding: 0.5rem 0.8rem;
+    background-color: #fdfdfd;
+    font-size: 0.87rem;
+    box-shadow: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  }
+  .profile-page .form-page-card .form-control:hover { border-color: #94a3b8; }
+  .profile-page .form-page-card .form-control:focus,
+  .profile-page .form-page-card .form-select:focus {
+    border-color: #ea580c !important;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.16), 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+    outline: none;
+  }
+  .profile-page .form-page-card .form-control[readonly] { background-color: #f8fafc; cursor: default; }
+  .profile-page .form-page-card .form-control[readonly]:hover { border-color: #cbd5e1; }
+
+  .profile-avatar-img { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; background-color: #ffffff; border: 3px solid #ffffff; box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14); }
+  .profile-avatar-initials { width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg, #ff6b1a 0%, #ea580c 100%); color: #ffffff; font-weight: 800; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(234, 88, 12, 0.25); }
+</style>
+
+{% set role_name = current_user.role.name if current_user.role else 'Staff' %}
+{% set role_colors = {
+  'Admin': ('#dc2626', 'rgba(220, 38, 38, 0.12)'),
+  'Manager': ('#d97706', 'rgba(217, 119, 6, 0.12)'),
+  'Accountant': ('#2563eb', 'rgba(37, 99, 235, 0.12)'),
+  'Staff': ('#2563eb', 'rgba(37, 99, 235, 0.12)')
+} %}
+{% set rc = role_colors.get(role_name, ('#64748b', 'rgba(100, 116, 139, 0.12)')) %}
+{% set joined_date = current_user.created_at.strftime('%b %d, %Y') if current_user.created_at else 'N/A' %}
+
+<div class="form-page-wrapper profile-page">
+
+  <!-- Identity Header -->
+  <div class="form-page-card p-4 mb-4">
+    <div class="d-flex align-items-center gap-4">
+      {% if current_user.role and current_user.role.name == 'Admin' %}
+        <img src="{{ url_for('static', filename='vema-tab-logo.png') }}" alt="Admin" class="profile-avatar-img">
+      {% else %}
+        <div class="profile-avatar-initials font-mono">{{ current_user.name[:2].upper() if current_user.name else '?' }}</div>
+      {% endif %}
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <h2 class="form-page-title mb-0" style="font-size: 1.3rem;">{{ current_user.name }}</h2>
+          <span class="badge rounded-pill fw-bold" style="color: {{ rc[0] }}; background: {{ rc[1] }}; font-size: 0.72rem;">{{ role_name }}</span>
+          {% if current_user.active %}
+            <span class="badge rounded-pill fw-bold" style="color: #16a34a; background: rgba(22, 163, 74, 0.12); font-size: 0.72rem;">● Active</span>
+          {% else %}
+            <span class="badge rounded-pill fw-bold" style="color: #64748b; background: rgba(100, 116, 139, 0.12); font-size: 0.72rem;">Inactive</span>
+          {% endif %}
+        </div>
+        <p class="form-page-subtitle mb-1">{{ current_user.email }}</p>
+        <p class="small text-muted mb-0">Member since {{ joined_date }} &middot; User ID #{{ current_user.id }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Personal Details Form -->
+  <form method="POST">
+    <div class="form-page-card">
+      <div class="form-section-header">
+        <p class="form-section-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; color: #ea580c;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Personal Details
+        </p>
+      </div>
+      <div class="form-section-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Full Name <span class="req" title="Required">*</span></label>
+            <input type="text" class="form-control" name="name" value="{{ current_user.name }}" placeholder="Your full name" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Email Address (Primary Login)</label>
+            <input type="email" class="form-control font-mono" value="{{ current_user.email }}" readonly disabled>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" class="form-control font-mono" name="phone" value="{{ current_user.phone or '' }}" placeholder="+91 9876543210">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">System Role</label>
+            <input type="text" class="form-control" value="{{ role_name }}" readonly disabled>
+          </div>
+        </div>
+      </div>
+      <div class="form-action-bar form-page-card" style="border-radius: 0 0 16px 16px;">
+        <a href="{{ url_for('auth.change_password') }}" class="btn-form-cancel">Change Password</a>
+        <button type="submit" class="btn-form-primary">Update Profile</button>
+      </div>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

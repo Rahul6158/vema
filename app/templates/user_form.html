@@ -1,0 +1,77 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="form-page-wrapper">
+
+  <!-- Page Header -->
+  <div class="form-page-header">
+    <div>
+      <h1 class="form-page-title">{{ 'Edit User Profile' if user else 'Add New User' }}</h1>
+      <p class="form-page-subtitle">Configure user account credentials, contact info, and permission roles.</p>
+    </div>
+    <a href="{{ url_for('main.users') }}" class="btn-form-cancel">← Back to Users</a>
+  </div>
+
+  <form method="POST">
+    <div class="form-page-card mb-3">
+      <div class="form-section-header">
+        <p class="form-section-title">👤 Account Information</p>
+      </div>
+      <div class="form-section-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Full Name <span class="req">*</span></label>
+            <input type="text" class="form-control" name="name"
+                   value="{{ user.name if user else '' }}" required placeholder="e.g. Rahul Sharma">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Email Address <span class="req">*</span></label>
+            <input type="email" class="form-control font-mono" name="email"
+                   value="{{ user.email if user else '' }}" required placeholder="user@example.com">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" class="form-control font-mono" name="phone"
+                   value="{{ user.phone if user else '' }}" placeholder="+91 9876543210">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Access Role <span class="req">*</span></label>
+            <select class="form-select" name="role_id" required>
+              <option value="">-- Select Role --</option>
+              {% for r in roles %}
+                <option value="{{ r.id }}" {% if user and user.role_id == r.id %}selected{% endif %}>{{ r.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <hr class="form-section-divider">
+
+      <div class="form-section-header">
+        <p class="form-section-title">🔒 Password</p>
+      </div>
+      <div class="form-section-body">
+        <div class="col-md-8">
+          <label class="form-label">
+            Password
+            {% if user %}
+              <span class="text-muted fw-normal">(Leave blank to keep unchanged)</span>
+            {% else %}
+              <span class="req">*</span>
+            {% endif %}
+          </label>
+          <input type="password" class="form-control" name="password"
+                 {% if not user %}required{% endif %} placeholder="Enter secure password">
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="form-action-bar form-page-card" style="border-radius: 16px;">
+      <a href="{{ url_for('main.users') }}" class="btn-form-cancel">Cancel</a>
+      <button type="submit" class="btn-form-primary">Save User Account</button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

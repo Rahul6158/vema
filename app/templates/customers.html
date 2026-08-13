@@ -1,0 +1,151 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h1 class="page-title mb-1">Customer Directory</h1>
+        <p class="text-muted small mb-0">Maintain retail and commercial customer records, contact info, and locations.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span>Back to Dashboard</span>
+        </a>
+        <button type="button" class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#importCustModal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>📥 Import Contacts</span>
+        </button>
+        <a href="{{ url_for('main.add_customer') }}" class="btn btn-primary btn-sm">+ Add New Customer</a>
+    </div>
+</div>
+
+<!-- Import Contacts Modal -->
+<div class="modal fade" id="importCustModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white py-2">
+        <h6 class="modal-title fw-bold mb-0">📥 Import Customer Contacts (CSV / Text)</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="custImportCsvFile" class="form-label small fw-bold">Upload CSV / TXT File</label>
+          <input type="file" class="form-control form-control-sm" id="custImportCsvFile" accept=".csv, .txt">
+        </div>
+        <div class="mb-3">
+          <label for="custImportTextData" class="form-label small fw-bold">OR Paste Contacts (Name, Phone, Email, Town)</label>
+          <textarea class="form-control font-mono" id="custImportTextData" rows="5" placeholder="Name, Phone, Email, Town&#10;Rahul Kumar, 9876543210, rahul@example.com, Delhi&#10;Sneha Sharma, 9988776655, sneha@example.com, Mumbai"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="custSubmitImportBtn" class="btn btn-primary btn-sm">Import Contacts</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const importBtn = document.getElementById('custSubmitImportBtn');
+    if (importBtn) {
+        importBtn.addEventListener('click', function() {
+            const fileInput = document.getElementById('custImportCsvFile');
+            const textData = document.getElementById('custImportTextData').value.trim();
+
+            const formData = new FormData();
+            if (fileInput.files.length > 0) {
+                formData.append('file', fileInput.files[0]);
+            } else if (textData) {
+                formData.append('text_data', textData);
+            } else {
+                alert('Please select a CSV file or paste contact text data.');
+                return;
+            }
+
+            fetch('/api/customers/import', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert(data.error || 'Failed to import contacts.');
+                }
+            })
+            .catch(err => alert('Error importing contacts.'));
+        });
+    }
+});
+</script>
+
+<!-- Search & Filter Bar -->
+<div class="card mb-4">
+    <div class="card-body p-3">
+        <form method="GET" action="{{ url_for('main.customers') }}" class="row g-2">
+            <div class="col-md-9">
+                <input type="text" class="form-control" name="q" placeholder="Search by customer name, phone number, or town..." value="{{ query or '' }}">
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">Search</button>
+                {% if query %}
+                    <a href="{{ url_for('main.customers') }}" class="btn btn-secondary">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="card-title-text">Registered Customers ({{ customers|length }})</span>
+        <span class="badge badge-secondary">Contacts</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Phone Number</th>
+                    <th>Email Address</th>
+                    <th>Town / Location</th>
+                    <th>District</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in customers %}
+                <tr>
+                    <td class="fw-bold text-dark">{{ c.name }}</td>
+                    <td class="font-mono text-dark fw-semibold">{{ c.phone }}</td>
+                    <td class="font-mono small text-muted">{{ c.email or '—' }}</td>
+                    <td class="text-muted small">{{ c.town or '—' }}</td>
+                    <td class="text-muted small">{{ c.district or '—' }}</td>
+                    <td class="text-end">
+                        <div class="d-inline-flex gap-2">
+                            <a href="{{ url_for('main.edit_customer', customer_id=c.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+                            {% if current_user.role and current_user.role.name == 'Admin' %}
+                            <form method="POST" action="{{ url_for('main.delete_customer', customer_id=c.id) }}" onsubmit="return confirm('Delete customer record?');" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state-box py-5">
+                            <p class="mb-0 text-muted">No customer records found.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

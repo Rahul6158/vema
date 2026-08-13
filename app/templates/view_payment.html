@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Payment Record Details</h5>
+                <span class="badge bg-success fs-6">Payment #{{ payment.id }}</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="text-muted small text-uppercase font-weight-bold mb-1">Vendor Details</div>
+                        {% if payment.vendor %}
+                        <h6 class="fw-bold mb-1">
+                            <a href="{{ url_for('main.vendor_detail', vendor_id=payment.vendor.id) }}" class="text-decoration-none text-dark">
+                                {{ payment.vendor.vendor_name }}
+                            </a>
+                        </h6>
+                        <div class="small text-muted">Phone: {{ payment.vendor.phone or 'N/A' }}</div>
+                        {% else %}
+                        <span class="text-muted">Unlinked Vendor</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <div class="text-muted small text-uppercase font-weight-bold mb-1">Payment Date</div>
+                        <div class="h6 fw-bold mb-1">{{ payment.payment_date }}</div>
+                        <span class="badge bg-secondary">{{ payment.payment_method }}</span>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="p-3 bg-light rounded text-center mb-4">
+                    <div class="text-muted small text-uppercase font-weight-bold">Amount Paid to Vendor</div>
+                    <div class="display-6 fw-bold text-success mt-1">₹{{ payment.amount_paid | round(2) }}</div>
+                </div>
+
+                {% if payment.vendor %}
+                <div class="alert alert-info py-2 small mb-4">
+                    <strong>Vendor Remaining Outstanding Balance:</strong> ₹{{ payment.vendor.outstanding_balance | round(2) }}
+                </div>
+                {% endif %}
+
+                <div class="mb-4">
+                    <div class="text-muted small font-weight-bold mb-2">Payment Proof / Receipt Attachment</div>
+                    {% if payment.attachment %}
+                    <div class="p-3 bg-light rounded d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="fs-5 me-2">🧾</span>
+                            <span class="fw-semibold">{{ payment.attachment }}</span>
+                        </div>
+                        <a href="{{ url_for('main.uploaded_file', filename=payment.attachment) }}" target="_blank" class="btn btn-sm btn-outline-success">Open Proof ↗</a>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-secondary small mb-0">No payment proof uploaded.</div>
+                    {% endif %}
+                </div>
+
+                {% if payment.reference_number %}
+                <div class="mb-3">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Reference / Transaction No.</div>
+                    <div class="fw-semibold font-mono">{{ payment.reference_number }}</div>
+                </div>
+                {% endif %}
+
+                {% if payment.notes %}
+                <div class="mb-4">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Notes / Remarks</div>
+                    <div class="p-3 bg-light rounded small">{{ payment.notes }}</div>
+                </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between align-items-center mt-4 pt-2">
+                    <a href="{{ url_for('main.payments') }}" class="btn btn-outline-secondary btn-sm">← Back to Payments</a>
+                    {% if payment.vendor %}
+                    <a href="{{ url_for('main.vendor_detail', vendor_id=payment.vendor.id) }}" class="btn btn-outline-success btn-sm">View Vendor Dashboard →</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

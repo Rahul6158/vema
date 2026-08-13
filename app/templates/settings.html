@@ -1,0 +1,282 @@
+{% extends "layout.html" %}
+
+{% block page_title %}System Settings & Masters{% endblock %}
+{% block page_subtitle %}Configure store profile, Master Categories, Master Brands, and Database Maintenance.{% endblock %}
+
+{% block content %}
+<style>
+  .settings-page { max-width: 1100px; overflow-x: hidden; }
+  .settings-page .form-page-header { margin-bottom: 1.5rem; }
+  .settings-page .form-section-header { position: relative; padding: 1rem 1.4rem 0.85rem; background: #ffffff; overflow: hidden; }
+  .settings-page .form-section-header::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+  .settings-page .store-section::before { background: #ea580c; }
+  .settings-page .whatsapp-section::before { background: #2563eb; }
+  .settings-page .masters-section::before { background: #16a34a; }
+  .settings-page .maintenance-section::before { background: #dc2626; }
+  .settings-page .form-section-title { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #334155; display: flex; align-items: center; margin: 0; }
+  .settings-page .form-page-card .form-label { font-size: 0.76rem; font-weight: 700; color: #475569; margin-bottom: 0.4rem; }
+  .settings-page .form-page-card .form-control,
+  .settings-page .form-page-card .form-select {
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    height: 44px;
+    padding: 0.5rem 0.8rem;
+    background-color: #fdfdfd;
+    font-size: 0.87rem;
+    box-shadow: none;
+  }
+</style>
+
+<div class="form-page-wrapper settings-page">
+  <!-- Page Header -->
+  <div class="form-page-header">
+    <div>
+      <h1 class="form-page-title">System Settings & Masters</h1>
+      <p class="form-page-subtitle">Configure store profile, master categories, master brands, and clean test data.</p>
+    </div>
+  </div>
+
+  <form method="POST">
+    <div class="row g-4 mb-4">
+      <!-- Store Information Card -->
+      <div class="col-lg-6">
+        <div class="form-page-card h-100 mb-0">
+          <div class="form-section-header store-section">
+            <p class="form-section-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; color: #ea580c;"><path d="M3 9l1-5h16l1 5"/><path d="M3 9a2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2"/><path d="M5 11v9h14v-9"/><path d="M9 20v-5h6v5"/></svg>
+              Store Profile &amp; Invoicing
+            </p>
+          </div>
+          <div class="form-section-body">
+            <div class="row g-3">
+              <div class="col-md-12">
+                <label class="form-label">Store / Company Name</label>
+                <input type="text" class="form-control" name="store_name" value="{{ settings.get('store_name', '') }}" placeholder="VEMA Home Appliances Ltd">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Contact Phone</label>
+                <input type="tel" class="form-control font-mono" name="store_phone" value="{{ settings.get('store_phone', '') }}" placeholder="+91 9876543210">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Contact Email</label>
+                <input type="email" class="form-control font-mono" name="store_email" value="{{ settings.get('store_email', '') }}" placeholder="contact@vema.com">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">Store Address</label>
+                <input type="text" class="form-control" name="store_address" value="{{ settings.get('store_address', '') }}" placeholder="123 Commercial Plaza, Main Street">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">Invoice Prefix</label>
+                <input type="text" class="form-control font-mono" name="invoice_prefix" value="{{ settings.get('invoice_prefix', 'VEMA-INV-') }}">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WhatsApp API Credentials Card -->
+      <div class="col-lg-6">
+        <div class="form-page-card h-100 mb-0">
+          <div class="form-section-header whatsapp-section">
+            <p class="form-section-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; color: #2563eb;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              WhatsApp Business Integration
+            </p>
+          </div>
+          <div class="form-section-body">
+            <div class="row g-3">
+              <div class="col-md-12">
+                <label class="form-label">WhatsApp Phone Number ID</label>
+                <input type="text" class="form-control font-mono" name="whatsapp_phone_id" value="{{ settings.get('whatsapp_phone_id', '') }}">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">WhatsApp Account ID</label>
+                <input type="text" class="form-control font-mono" name="whatsapp_account_id" value="{{ settings.get('whatsapp_account_id', '') }}">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">WhatsApp Permanent Access Token</label>
+                <input type="password" class="form-control font-mono" name="whatsapp_access_token" value="{{ settings.get('whatsapp_access_token', '') }}">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="form-action-bar form-page-card mb-4" style="border-radius: 16px;">
+      <a href="{{ url_for('main.dashboard') }}" class="btn-form-cancel">Back to Dashboard</a>
+      <button type="submit" class="btn-form-primary">Save Profile Settings</button>
+    </div>
+  </form>
+
+  <!-- MASTER DATA MANAGEMENT SECTION (Brands & Categories) -->
+  <div class="row g-4 mb-4">
+    <!-- Brand Master Management -->
+    <div class="col-lg-6">
+      <div class="form-page-card mb-0">
+        <div class="form-section-header masters-section">
+          <p class="form-section-title">Brand Master List</p>
+        </div>
+        <div class="form-section-body">
+          <div class="d-flex gap-2 mb-3">
+            <input type="text" id="settingNewBrandInput" class="form-control form-control-sm" placeholder="Add local/new brand name...">
+            <button type="button" id="settingAddBrandBtn" class="btn btn-orange-primary btn-sm text-nowrap">+ Add Brand</button>
+          </div>
+          <div class="border rounded-3 p-2" style="max-height: 220px; overflow-y: auto;">
+            <div id="brandsMasterContainer" class="d-flex flex-wrap gap-2">
+              <div class="text-center w-100 py-3 text-muted small">Loading Brands...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Master Management -->
+    <div class="col-lg-6">
+      <div class="form-page-card mb-0">
+        <div class="form-section-header masters-section">
+          <p class="form-section-title">Category Master List</p>
+        </div>
+        <div class="form-section-body">
+          <div class="d-flex gap-2 mb-3">
+            <input type="text" id="settingNewCategoryInput" class="form-control form-control-sm" placeholder="Add new category name...">
+            <button type="button" id="settingAddCategoryBtn" class="btn btn-orange-primary btn-sm text-nowrap">+ Add Category</button>
+          </div>
+          <div class="border rounded-3 p-2" style="max-height: 220px; overflow-y: auto;">
+            <div id="categoriesMasterContainer" class="d-flex flex-wrap gap-2">
+              <div class="text-center w-100 py-3 text-muted small">Loading Categories...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATABASE MAINTENANCE & CLEAN TEST DATA SECTION -->
+  <div class="form-page-card mb-4 border-danger">
+    <div class="form-section-header maintenance-section">
+      <p class="form-section-title text-danger">Database Maintenance &amp; Test Data Cleanup</p>
+    </div>
+    <div class="form-section-body">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <h6 class="fw-bold text-dark mb-1">Clean Synthetic Test Transactions</h6>
+          <p class="text-muted small mb-0">Delete all test purchases, dummy transactions, payments, and GRNs to start with a clean production system.</p>
+        </div>
+        <form method="POST" action="{{ url_for('main.admin_clear_test_data') }}" onsubmit="return confirm('WARNING: Are you sure you want to delete all test purchases and transaction records? This action cannot be undone.');">
+          <button type="submit" class="btn btn-danger btn-sm px-3 fw-bold d-inline-flex align-items-center gap-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Delete All Test Transactions</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    function loadMasters() {
+        fetch('/api/masters/all')
+            .then(res => res.json())
+            .then(data => {
+                const brandBox = document.getElementById('brandsMasterContainer');
+                const catBox = document.getElementById('categoriesMasterContainer');
+
+                // Brands
+                if (data.brands && data.brands.length > 0) {
+                    brandBox.innerHTML = data.brands.map(b => `
+                        <span class="badge bg-light text-dark border p-2 d-inline-flex align-items-center gap-2" style="font-size: 0.82rem;">
+                            <span>${b.name}</span>
+                            <button type="button" class="btn-close btn-close-sm del-brand-btn" data-id="${b.id}" style="font-size: 0.65rem;" title="Delete Brand"></button>
+                        </span>
+                    `).join('');
+                } else {
+                    brandBox.innerHTML = '<div class="text-muted small py-2">No brands added yet.</div>';
+                }
+
+                // Categories
+                if (data.categories && data.categories.length > 0) {
+                    catBox.innerHTML = data.categories.map(c => `
+                        <span class="badge bg-light text-dark border p-2 d-inline-flex align-items-center gap-2" style="font-size: 0.82rem;">
+                            <span>${c.name}</span>
+                            <button type="button" class="btn-close btn-close-sm del-cat-btn" data-id="${c.id}" style="font-size: 0.65rem;" title="Delete Category"></button>
+                        </span>
+                    `).join('');
+                } else {
+                    catBox.innerHTML = '<div class="text-muted small py-2">No categories added yet.</div>';
+                }
+
+                // Delete Brand Listeners
+                document.querySelectorAll('.del-brand-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.dataset.id;
+                        if (confirm('Delete this brand master?')) {
+                            fetch(`/api/masters/brands/${id}/delete`, { method: 'POST' })
+                                .then(res => res.json())
+                                .then(() => loadMasters());
+                        }
+                    });
+                });
+
+                // Delete Category Listeners
+                document.querySelectorAll('.del-cat-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.dataset.id;
+                        if (confirm('Delete this category master?')) {
+                            fetch(`/api/masters/categories/${id}/delete`, { method: 'POST' })
+                                .then(res => res.json())
+                                .then(() => loadMasters());
+                        }
+                    });
+                });
+            });
+    }
+
+    loadMasters();
+
+    // Add Brand Handler
+    document.getElementById('settingAddBrandBtn').addEventListener('click', function() {
+        const input = document.getElementById('settingNewBrandInput');
+        const name = input.value.trim();
+        if (!name) return;
+        fetch('/api/masters/brands/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                input.value = '';
+                loadMasters();
+            } else {
+                alert(data.error || 'Failed');
+            }
+        });
+    });
+
+    // Add Category Handler
+    document.getElementById('settingAddCategoryBtn').addEventListener('click', function() {
+        const input = document.getElementById('settingNewCategoryInput');
+        const name = input.value.trim();
+        if (!name) return;
+        fetch('/api/masters/categories/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                input.value = '';
+                loadMasters();
+            } else {
+                alert(data.error || 'Failed');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

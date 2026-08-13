@@ -1,0 +1,479 @@
+{% extends "layout.html" %}
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Filter Control Bar -->
+<form id="dashboardFilterForm" method="GET" action="{{ url_for('main.dashboard') }}"
+      class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 p-3 bg-white rounded-3 border shadow-sm">
+  <div class="d-flex align-items-center gap-3 flex-wrap">
+    <div class="d-flex align-items-center gap-2">
+      <label for="saleTypeSelect" class="filter-label fw-bold mb-0">Sale Type:</label>
+      <select name="sale_type" id="saleTypeSelect" class="form-select form-select-sm font-mono shadow-none" style="width: 140px;">
+        <option value="All" {% if sale_type_filter == 'All' or not sale_type_filter %}selected{% endif %}>All / Both</option>
+        <option value="Wholesale" {% if sale_type_filter == 'Wholesale' %}selected{% endif %}>Wholesale</option>
+        <option value="Retail" {% if sale_type_filter == 'Retail' %}selected{% endif %}>Retail</option>
+      </select>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <label for="timePeriodSelect" class="filter-label fw-bold mb-0">Time Period:</label>
+      <select name="filter" id="timePeriodSelect" class="form-select form-select-sm font-mono shadow-none" style="width: 130px;">
+        <option value="daily" {% if time_filter in ['daily', 'day'] %}selected{% endif %}>Daily</option>
+        <option value="monthly" {% if time_filter in ['monthly', 'month'] or not time_filter %}selected{% endif %}>Monthly</option>
+        <option value="yearly" {% if time_filter in ['yearly', 'year'] %}selected{% endif %}>Yearly</option>
+      </select>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <label for="startDateInput" class="filter-label fw-bold mb-0">From:</label>
+      <input type="date" id="startDateInput" name="start_date" class="form-control form-control-sm font-mono" value="{{ start_date or '' }}" style="width: 140px;">
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <label for="endDateInput" class="filter-label fw-bold mb-0">To:</label>
+      <input type="date" id="endDateInput" name="end_date" class="form-control form-control-sm font-mono" value="{{ end_date or '' }}" style="width: 140px;">
+    </div>
+  </div>
+
+  <div class="d-flex align-items-center gap-2">
+    <button type="submit" id="applyFiltersBtn" class="btn btn-orange-primary btn-sm d-inline-flex align-items-center gap-1">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Apply Filters</span>
+    </button>
+    <button type="button" id="resetDashboardFiltersBtn" class="btn btn-outline-secondary btn-sm">Reset</button>
+    <a href="{{ url_for('main.reports_export', format='csv') }}" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>Export CSV</span>
+    </a>
+  </div>
+</form>
+
+<!-- 6 KPI Dashboard Summary Cards -->
+<div class="row g-3 mb-4">
+  <!-- Card 1: Total Units Sold -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="dashboard-kpi-card h-100 p-3 bg-white rounded-3 border shadow-sm">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-uppercase text-muted fw-bold small" style="font-size: 0.7rem;">Total Units Sold</span>
+        <div class="p-2 rounded-circle bg-orange-subtle text-orange">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </div>
+      </div>
+      <div class="h3 fw-bold mb-0 text-dark" id="cardTotalUnitsSold">{{ "{:,}".format(total_units_sold) }}</div>
+      <div class="text-muted small mt-1" style="font-size: 0.72rem;">Units over selected scope</div>
+    </div>
+  </div>
+
+  <!-- Card 2: Total Sales -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="dashboard-kpi-card h-100 p-3 bg-white rounded-3 border shadow-sm">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-uppercase text-muted fw-bold small" style="font-size: 0.7rem;">Total Sales</span>
+        <div class="p-2 rounded-circle bg-success-subtle text-success">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+      </div>
+      <div class="h3 fw-bold mb-0 text-success" id="cardTotalSales">₹{{ "{:,.0f}".format(total_sales_val) }}</div>
+      <div class="text-muted small mt-1" style="font-size: 0.72rem;">Gross sales revenue</div>
+    </div>
+  </div>
+
+  <!-- Card 3: Wholesale Sales -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="dashboard-kpi-card h-100 p-3 bg-white rounded-3 border shadow-sm">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-uppercase text-muted fw-bold small" style="font-size: 0.7rem;">Wholesale Sales</span>
+        <div class="p-2 rounded-circle bg-primary-subtle text-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+      </div>
+      <div class="h3 fw-bold mb-0 text-primary" id="cardWholesaleSales">₹{{ "{:,.0f}".format(wholesale_sales_val) }}</div>
+      <div class="text-muted small mt-1" style="font-size: 0.72rem;">B2B & Wholesale channel</div>
+    </div>
+  </div>
+
+  <!-- Card 4: Retail Sales -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="dashboard-kpi-card h-100 p-3 bg-white rounded-3 border shadow-sm">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-uppercase text-muted fw-bold small" style="font-size: 0.7rem;">Retail Sales</span>
+        <div class="p-2 rounded-circle bg-info-subtle text-info">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/></svg>
+        </div>
+      </div>
+      <div class="h3 fw-bold mb-0 text-info" id="cardRetailSales">₹{{ "{:,.0f}".format(retail_sales_val) }}</div>
+      <div class="text-muted small mt-1" style="font-size: 0.72rem;">Direct retail channel</div>
+    </div>
+  </div>
+
+  <!-- Card 5: Total Products -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="dashboard-kpi-card h-100 p-3 bg-white rounded-3 border shadow-sm">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-uppercase text-muted fw-bold small" style="font-size: 0.7rem;">Total Products</span>
+        <div class="p-2 rounded-circle bg-warning-subtle text-warning">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        </div>
+      </div>
+      <div class="h3 fw-bold mb-0 text-dark" id="cardTotalProducts">{{ total_products_count }}</div>
+      <div class="text-muted small mt-1" style="font-size: 0.72rem;">Active product catalog</div>
+    </div>
+  </div>
+
+  <!-- Card 6: Total Purchases -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="dashboard-kpi-card h-100 p-3 bg-white rounded-3 border shadow-sm">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-uppercase text-muted fw-bold small" style="font-size: 0.7rem;">Total Purchases</span>
+        <div class="p-2 rounded-circle bg-secondary-subtle text-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+      </div>
+      <div class="h3 fw-bold mb-0 text-dark" id="cardTotalPurchases">{{ total_purchases_count }}</div>
+      <div class="text-muted small mt-1" style="font-size: 0.72rem;">Total purchase transactions</div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Grid - Row 1: Line Charts for Units & Sales -->
+<div class="row g-4 mb-4">
+  <!-- Chart A: Dashboard for Units Sold -->
+  <div class="col-lg-6">
+    <div class="card border shadow-sm h-100">
+      <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+        <h5 class="card-title fw-bold mb-0 text-dark" style="font-size: 1.05rem;">Dashboard for Units Sold</h5>
+        <span class="badge bg-orange-subtle text-orange font-mono" id="unitsChartScopeBadge">{{ time_filter_label }}</span>
+      </div>
+      <div class="card-body">
+        <div style="height: 260px; position: relative;">
+          <canvas id="unitsSoldChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart B: Dashboard for Total Sales -->
+  <div class="col-lg-6">
+    <div class="card border shadow-sm h-100">
+      <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+        <h5 class="card-title fw-bold mb-0 text-dark" style="font-size: 1.05rem;">Dashboard for Total Sales</h5>
+        <span class="badge bg-success-subtle text-success font-mono" id="salesChartScopeBadge">{{ time_filter_label }}</span>
+      </div>
+      <div class="card-body">
+        <div style="height: 260px; position: relative;">
+          <canvas id="totalSalesChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Grid - Row 2: Pie Charts for Product Type & Brand -->
+<div class="row g-4 mb-4">
+  <!-- Chart C: Pie Chart for Product Type -->
+  <div class="col-lg-6">
+    <div class="card border shadow-sm h-100">
+      <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+        <h5 class="card-title fw-bold mb-0 text-dark" style="font-size: 1.05rem;">Pie Chart for Product Type</h5>
+        <span class="badge bg-light text-secondary font-mono">Channel Distribution</span>
+      </div>
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-md-7 d-flex justify-content-center">
+            <div style="height: 230px; width: 230px; position: relative;">
+              <canvas id="productTypePieChart"></canvas>
+            </div>
+          </div>
+          <div class="col-md-5 mt-3 mt-md-0">
+            <div id="productTypeLegend" class="d-flex flex-column gap-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart D: Pie Chart for Brand -->
+  <div class="col-lg-6">
+    <div class="card border shadow-sm h-100">
+      <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+        <h5 class="card-title fw-bold mb-0 text-dark" style="font-size: 1.05rem;">Pie Chart for Brand</h5>
+        <span class="badge bg-light text-secondary font-mono">Brand Distribution</span>
+      </div>
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-md-7 d-flex justify-content-center">
+            <div style="height: 230px; width: 230px; position: relative;">
+              <canvas id="brandPieChart"></canvas>
+            </div>
+          </div>
+          <div class="col-md-5 mt-3 mt-md-0">
+            <div id="brandLegend" class="d-flex flex-column gap-2" style="max-height: 230px; overflow-y: auto;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard Dynamic Interactive Script -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    let unitsSoldChartInstance = null;
+    let totalSalesChartInstance = null;
+    let productTypeChartInstance = null;
+    let brandChartInstance = null;
+
+    const initialUnitsLabels = {{ units_chart_labels | tojson }};
+    const initialUnitsValues = {{ units_chart_values | tojson }};
+    const initialSalesLabels = {{ sales_chart_labels | tojson }};
+    const initialSalesValues = {{ sales_chart_values | tojson }};
+    const initialProdLabels = {{ prod_type_labels | tojson }};
+    const initialProdValues = {{ prod_type_values | tojson }};
+    const initialProdPcts = {{ prod_type_pcts | tojson }};
+    const initialBrandLabels = {{ brand_labels | tojson }};
+    const initialBrandValues = {{ brand_values | tojson }};
+    const initialBrandPcts = {{ brand_pcts | tojson }};
+
+    const colorPalette = ['#ea580c', '#2563eb', '#16a34a', '#0891b2', '#d97706', '#9333ea', '#db2777', '#64748b'];
+
+    // Helper to format currency
+    function formatMoney(num) {
+        return '₹' + Number(num || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    }
+
+    // 1. Initialize Units Sold Line Chart
+    const ctxUnits = document.getElementById('unitsSoldChart').getContext('2d');
+    unitsSoldChartInstance = new Chart(ctxUnits, {
+        type: 'line',
+        data: {
+            labels: initialUnitsLabels,
+            datasets: [{
+                label: 'Units Sold',
+                data: initialUnitsValues,
+                borderColor: '#ea580c',
+                backgroundColor: 'rgba(234, 88, 12, 0.1)',
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: '#ea580c'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) { return 'Units: ' + context.raw; }
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { family: 'Plus Jakarta Sans', size: 10 } } },
+                y: {
+                    grid: { color: '#f1f5f9' },
+                    ticks: { font: { family: 'Plus Jakarta Sans', size: 10 }, stepSize: 1 }
+                }
+            }
+        }
+    });
+
+    // 2. Initialize Total Sales Line/Bar Chart
+    const ctxSales = document.getElementById('totalSalesChart').getContext('2d');
+    totalSalesChartInstance = new Chart(ctxSales, {
+        type: 'bar',
+        data: {
+            labels: initialSalesLabels,
+            datasets: [{
+                label: 'Total Sales (₹)',
+                data: initialSalesValues,
+                backgroundColor: '#16a34a',
+                borderRadius: 4,
+                barThickness: 20
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) { return 'Sales: ' + formatMoney(context.raw); }
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { family: 'Plus Jakarta Sans', size: 10 } } },
+                y: {
+                    grid: { color: '#f1f5f9' },
+                    ticks: {
+                        font: { family: 'Plus Jakarta Sans', size: 10 },
+                        callback: function(value) { return value >= 1000 ? (value/1000) + 'K' : value; }
+                    }
+                }
+            }
+        }
+    });
+
+    // Render Pie Chart Legends
+    function renderLegend(elementId, labels, values, percentages, palette) {
+        const container = document.getElementById(elementId);
+        if (!container) return;
+        container.innerHTML = '';
+        labels.forEach((label, idx) => {
+            const color = palette[idx % palette.length];
+            const valStr = formatMoney(values[idx] || 0);
+            const pctStr = (percentages[idx] || 0) + '%';
+
+            const item = document.createElement('div');
+            item.className = 'd-flex align-items-center justify-content-between small py-1 border-bottom border-light';
+            item.innerHTML = `
+                <div class="d-flex align-items-center gap-2">
+                    <span class="rounded-circle" style="width: 10px; height: 10px; background-color: ${color}; display: inline-block;"></span>
+                    <span class="fw-bold text-dark">${label}</span>
+                </div>
+                <div class="text-end font-mono">
+                    <span class="fw-semibold text-dark">${valStr}</span>
+                    <small class="text-muted ms-1">(${pctStr})</small>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    // 3. Initialize Product Type Pie Chart
+    const ctxProd = document.getElementById('productTypePieChart').getContext('2d');
+    productTypeChartInstance = new Chart(ctxProd, {
+        type: 'doughnut',
+        data: {
+            labels: initialProdLabels,
+            datasets: [{
+                data: initialProdValues,
+                backgroundColor: ['#2563eb', '#0891b2', '#ea580c'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: { legend: { display: false } }
+        }
+    });
+    renderLegend('productTypeLegend', initialProdLabels, initialProdValues, initialProdPcts, ['#2563eb', '#0891b2', '#ea580c']);
+
+    // 4. Initialize Brand Pie Chart
+    const ctxBrand = document.getElementById('brandPieChart').getContext('2d');
+    brandChartInstance = new Chart(ctxBrand, {
+        type: 'doughnut',
+        data: {
+            labels: initialBrandLabels,
+            datasets: [{
+                data: initialBrandValues,
+                backgroundColor: colorPalette,
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: { legend: { display: false } }
+        }
+    });
+    renderLegend('brandLegend', initialBrandLabels, initialBrandValues, initialBrandPcts, colorPalette);
+
+    // Dynamic Filter Refresh via AJAX Fetch API
+    function fetchAndUpdateDashboard() {
+        const saleType = document.getElementById('saleTypeSelect').value;
+        const timePeriod = document.getElementById('timePeriodSelect').value;
+        const startDate = document.getElementById('startDateInput').value;
+        const endDate = document.getElementById('endDateInput').value;
+
+        const queryParams = new URLSearchParams({
+            sale_type: saleType,
+            time_period: timePeriod,
+            start_date: startDate,
+            end_date: endDate
+        }).toString();
+
+        // 1. Refresh Summary Cards
+        fetch(`/api/dashboard/summary?${queryParams}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('cardTotalUnitsSold').innerText = Number(data.total_units_sold || 0).toLocaleString();
+                document.getElementById('cardTotalSales').innerText = formatMoney(data.total_sales);
+                document.getElementById('cardWholesaleSales').innerText = formatMoney(data.wholesale_sales);
+                document.getElementById('cardRetailSales').innerText = formatMoney(data.retail_sales);
+                document.getElementById('cardTotalProducts').innerText = data.total_products || 0;
+                document.getElementById('cardTotalPurchases').innerText = data.total_purchases || 0;
+            })
+            .catch(err => console.error("Summary API error:", err));
+
+        // 2. Refresh Units Sold Chart
+        fetch(`/api/dashboard/units-sold?${queryParams}`)
+            .then(res => res.json())
+            .then(data => {
+                unitsSoldChartInstance.data.labels = data.labels || [];
+                unitsSoldChartInstance.data.datasets[0].data = data.values || [];
+                unitsSoldChartInstance.update();
+            });
+
+        // 3. Refresh Total Sales Chart
+        fetch(`/api/dashboard/total-sales?${queryParams}`)
+            .then(res => res.json())
+            .then(data => {
+                totalSalesChartInstance.data.labels = data.labels || [];
+                totalSalesChartInstance.data.datasets[0].data = data.values || [];
+                totalSalesChartInstance.update();
+            });
+
+        // 4. Refresh Product Type Pie Chart
+        fetch(`/api/dashboard/product-type?${queryParams}`)
+            .then(res => res.json())
+            .then(data => {
+                productTypeChartInstance.data.labels = data.labels || [];
+                productTypeChartInstance.data.datasets[0].data = data.values || [];
+                productTypeChartInstance.update();
+                renderLegend('productTypeLegend', data.labels || [], data.values || [], data.percentages || [], ['#2563eb', '#0891b2', '#ea580c']);
+            });
+
+        // 5. Refresh Brand Pie Chart
+        fetch(`/api/dashboard/brand?${queryParams}`)
+            .then(res => res.json())
+            .then(data => {
+                brandChartInstance.data.labels = data.labels || [];
+                brandChartInstance.data.datasets[0].data = data.values || [];
+                brandChartInstance.update();
+                renderLegend('brandLegend', data.labels || [], data.values || [], data.percentages || [], colorPalette);
+            });
+    }
+
+    // Attach listeners on filter change
+    document.getElementById('saleTypeSelect').addEventListener('change', fetchAndUpdateDashboard);
+    document.getElementById('timePeriodSelect').addEventListener('change', fetchAndUpdateDashboard);
+    document.getElementById('startDateInput').addEventListener('change', fetchAndUpdateDashboard);
+    document.getElementById('endDateInput').addEventListener('change', fetchAndUpdateDashboard);
+
+    document.getElementById('dashboardFilterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetchAndUpdateDashboard();
+    });
+
+    document.getElementById('resetDashboardFiltersBtn').addEventListener('click', function() {
+        document.getElementById('saleTypeSelect').value = 'All';
+        document.getElementById('timePeriodSelect').value = 'monthly';
+        document.getElementById('startDateInput').value = '';
+        document.getElementById('endDateInput').value = '';
+        fetchAndUpdateDashboard();
+    });
+});
+</script>
+
+{% include '_chart_enlarge_modal.html' %}
+{% endblock %}

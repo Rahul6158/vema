@@ -1,0 +1,300 @@
+{% extends "layout.html" %}
+
+{% block page_title %}Vendors{% endblock %}
+{% block page_subtitle %}Manage, view and organize all your vendors.{% endblock %}
+
+{% block content %}
+
+<!-- Page Header Bar -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h3 fw-bold text-dark mb-1">Vendors Directory</h1>
+    <p class="text-muted small mb-0">Manage, view, and organize all supplier & vendor relationships.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      <span>Back to Dashboard</span>
+    </a>
+    <a href="{{ url_for('main.add_vendor') }}" class="btn btn-orange-primary btn-sm d-inline-flex align-items-center gap-1">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>+ Add Vendor</span>
+    </a>
+  </div>
+</div>
+
+<!-- 5 Top Metric KPI Row (Highlighted Color Schemas) -->
+<div class="row g-3 mb-4">
+  <!-- Card 1: TOTAL VENDORS (Orange Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-orange">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">TOTAL VENDORS</div>
+          <div class="kpi-value-num">{{ total_vendors_count }}</div>
+          <div class="kpi-trend-green mt-1">↑ {{ vendors_added_this_month }} added this month</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: ACTIVE VENDORS (Green Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-green">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">ACTIVE VENDORS</div>
+          <div class="kpi-value-num">{{ active_vendors_count }}</div>
+          <div class="kpi-trend-green mt-1">↑ {{ active_added_this_month }} active this month</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: INACTIVE VENDORS (Red Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-red">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="22" y2="12"/><line x1="22" y1="8" x2="18" y2="12"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">INACTIVE VENDORS</div>
+          <div class="kpi-value-num">{{ inactive_vendors_count }}</div>
+          <div class="text-muted small mt-1" style="font-weight: 600;">Out of {{ total_vendors_count }} total</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4: TOTAL PURCHASES (Amber Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-amber">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square fw-bold fs-5">
+          ₹
+        </div>
+        <div>
+          <div class="kpi-title-header">TOTAL PURCHASES</div>
+          <div class="kpi-value-num">₹{{ "{:,.0f}".format(total_purchases_val) }}</div>
+          <div class="{% if purchases_pct_change >= 0 %}kpi-trend-green{% else %}kpi-trend-red{% endif %} mt-1">
+            {% if purchases_pct_change >= 0 %}↑{% else %}↓{% endif %} {{ "%.1f"|format(purchases_pct_change|abs) }}% vs last month
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 5: OUTSTANDING PAYABLE (Blue Theme) -->
+  <div class="col-6 col-md-4 col-xl">
+    <div class="dashboard-kpi-card kpi-card-blue">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon-square">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        </div>
+        <div>
+          <div class="kpi-title-header">OUTSTANDING PAYABLE</div>
+          <div class="kpi-value-num text-danger">₹{{ "{:,.0f}".format(total_outstanding_val) }}</div>
+          <div class="{% if outstanding_pct_change <= 0 %}kpi-trend-green{% else %}kpi-trend-red{% endif %} mt-1">
+            {% if outstanding_pct_change <= 0 %}↓{% else %}↑{% endif %} {{ "%.1f"|format(outstanding_pct_change|abs) }}% vs last month
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Table Card with Search & Filters (Fixed Height Card Container) -->
+<div class="card-clean mb-4" style="min-height: 520px; display: flex; flex-direction: column; justify-content: space-between;">
+  <div class="p-3 border-bottom">
+    <form method="GET" action="{{ url_for('main.vendors') }}" class="row g-2 align-items-center">
+      <!-- Search Input -->
+      <div class="col-xl-4 col-md-4">
+        <div class="header-search-box w-100" style="background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; height: 38px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" name="q" placeholder="Search by vendor name, email or mobile..." value="{{ query }}">
+        </div>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="col-xl-2 col-md-2">
+        <select name="status" class="filter-select-clean font-mono w-100" style="height: 38px;" onchange="this.form.submit()">
+          <option value="All" {% if status_filter == 'All' or not status_filter %}selected{% endif %}>Status: All</option>
+          <option value="Active" {% if status_filter == 'Active' %}selected{% endif %}>Active</option>
+          <option value="Inactive" {% if status_filter == 'Inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+      </div>
+
+      <!-- Vendor Type Filter -->
+      <div class="col-xl-2 col-md-2">
+        <select name="type" class="filter-select-clean font-mono w-100" style="height: 38px;" onchange="this.form.submit()">
+          <option value="All" {% if type_filter == 'All' or not type_filter %}selected{% endif %}>Type: All</option>
+          <option value="Supplier" {% if type_filter == 'Supplier' %}selected{% endif %}>Supplier</option>
+          <option value="Manufacturer" {% if type_filter == 'Manufacturer' %}selected{% endif %}>Manufacturer</option>
+          <option value="Distributor" {% if type_filter == 'Distributor' %}selected{% endif %}>Distributor</option>
+          <option value="Others" {% if type_filter == 'Others' %}selected{% endif %}>Others</option>
+        </select>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="col-xl-4 col-md-4 d-flex justify-content-end gap-2 ms-auto">
+        <button type="submit" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1 font-mono text-nowrap" style="height: 38px; border-radius: 8px; font-size: 0.78rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          <span>Filter</span>
+        </button>
+        <a href="{{ url_for('main.add_vendor') }}" class="btn btn-orange-primary text-nowrap d-inline-flex align-items-center gap-1" style="height: 38px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Add Vendor</span>
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Vendors Data Table -->
+  <div class="table-responsive" style="flex-grow: 1; min-height: 380px;">
+    <table class="table-clean">
+      <thead>
+        <tr>
+          <th>Vendor Name</th>
+          <th>Contact Person</th>
+          <th>Mobile / Email</th>
+          <th>Vendor Type</th>
+          <th>Status</th>
+          <th>Total Purchases</th>
+          <th>Outstanding Balance</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if vendors %}
+          {% for v in vendors %}
+          <tr>
+            <!-- Vendor Name with Avatar Initials -->
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold font-mono" style="width: 34px; height: 34px; background-color: #fff7ed; color: #ea580c; font-size: 0.75rem; border: 1px solid #fed7aa; flex-shrink: 0;">
+                  {{ v.vendor_name[:2].upper() }}
+                </div>
+                <a href="{{ url_for('main.vendor_detail', vendor_id=v.id) }}" class="vendor-name-text text-decoration-none">
+                  {{ v.vendor_name }}
+                </a>
+              </div>
+            </td>
+
+            <!-- Contact Person -->
+            <td class="text-dark">{{ v.contact_person or '—' }}</td>
+
+            <!-- Mobile & Email -->
+            <td>
+              <div class="fw-semibold font-mono text-dark" style="font-size: 0.8125rem;">{{ v.phone or '—' }}</div>
+              <div class="text-muted small" style="font-size: 0.75rem;">contact@{{ v.vendor_name|lower|replace(' ', '')|replace('.', '') }}.com</div>
+            </td>
+
+            <!-- Vendor Type Badge -->
+            <td>
+              {% set vtype = v.vendor_type or 'Supplier' %}
+              {% if vtype == 'Manufacturer' %}
+                <span class="badge" style="background-color: #dbeafe; color: #1d4ed8; font-weight: 700; padding: 0.25em 0.75em; border-radius: 999px; font-size: 0.72rem;">Manufacturer</span>
+              {% elif vtype in ('Others', 'Dealer') %}
+                <span class="badge" style="background-color: #f1f5f9; color: #475569; font-weight: 700; padding: 0.25em 0.75em; border-radius: 999px; font-size: 0.72rem;">{{ vtype }}</span>
+              {% else %}
+                <span class="badge" style="background-color: #ffedd5; color: #c2410c; font-weight: 700; padding: 0.25em 0.75em; border-radius: 999px; font-size: 0.72rem;">{{ vtype }}</span>
+              {% endif %}
+            </td>
+
+            <!-- Status Badge -->
+            <td>
+              {% set vstatus = v.status or 'Active' %}
+              {% if vstatus == 'Active' %}
+                <span class="badge-status-approved">Active</span>
+              {% else %}
+                <span class="badge" style="background-color: #fee2e2; color: #b91c1c; font-weight: 700; padding: 0.25em 0.75em; border-radius: 999px; font-size: 0.72rem;">Inactive</span>
+              {% endif %}
+            </td>
+
+            <!-- Total Purchases -->
+            <td class="fw-bold font-mono text-dark">₹{{ "{:,.0f}".format(v.total_purchased) }}</td>
+
+            <!-- Outstanding Balance -->
+            <td class="fw-bold font-mono text-danger">₹{{ "{:,.0f}".format(v.outstanding_balance) }}</td>
+
+            <!-- Action Icon Buttons -->
+            <td class="text-end">
+              <div class="d-inline-flex align-items-center gap-1">
+                <a href="{{ url_for('main.vendor_detail', vendor_id=v.id) }}" class="btn-icon-action" title="View Detail">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </a>
+                <a href="{{ url_for('main.edit_vendor', vendor_id=v.id) }}" class="btn-icon-action" title="Edit Vendor">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </a>
+                <form method="POST" action="{{ url_for('main.delete_vendor', vendor_id=v.id) }}" style="display:inline;" onsubmit="return confirm('Delete this vendor profile?');">
+                  <button type="submit" class="btn-icon-action border-0 bg-transparent" title="Delete Vendor">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" class="text-center py-5 text-muted">
+              <div class="mb-2">🏢</div>
+              <div>No vendors found matching criteria.</div>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer Pagination Summary (Fixed at Bottom) -->
+  <div class="card-table-footer-fixed" style="font-size: 0.78rem;">
+    <div class="text-muted">
+      {% if total_items %}
+        Showing {{ start_idx }} to {{ end_idx }} of {{ total_items }} entries
+      {% else %}
+        No entries found
+      {% endif %}
+    </div>
+    {% if total_pages > 1 %}
+    <div class="d-flex align-items-center gap-1">
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page <= 1 %}disabled{% endif %}" href="{{ url_for('main.vendors', q=query, status=status_filter, type=type_filter, page=page-1) if page > 1 else '#' }}">&lt;</a>
+      {% for pno in pages %}
+        {% if pno is none %}
+          <span class="text-muted px-1">...</span>
+        {% else %}
+          <a class="btn btn-sm {% if pno == page %}btn-orange-primary{% else %}btn-light border{% endif %} p-1 px-2" href="{{ url_for('main.vendors', q=query, status=status_filter, type=type_filter, page=pno) }}">{{ pno }}</a>
+        {% endif %}
+      {% endfor %}
+      <a class="btn btn-sm btn-light border p-1 px-2 {% if page >= total_pages %}disabled{% endif %}" href="{{ url_for('main.vendors', q=query, status=status_filter, type=type_filter, page=page+1) if page < total_pages else '#' }}">&gt;</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+.btn-icon-action {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.btn-icon-action:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+</style>
+{% endblock %}

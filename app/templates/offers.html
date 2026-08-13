@@ -1,0 +1,606 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container-fluid px-0">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-1">Promotions &amp; WhatsApp Marketing</h1>
+      <p class="text-muted small mb-0">Create offer campaigns with photo banners and send bulk WhatsApp messages directly to recipient phone numbers.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span>Back to Dashboard</span>
+      </a>
+      <button type="button" class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#importContactsModal">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>📥 Import Contacts</span>
+      </button>
+      <a href="{{ url_for('main.add_offer') }}" class="btn btn-orange-primary btn-sm d-inline-flex align-items-center gap-1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>+ Create New Offer</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Active Offers Table Card -->
+  <div class="card border shadow-sm mb-4">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+      <h5 class="card-title fw-bold mb-0 text-dark">Active Offer Campaigns ({{ offers|length }})</h5>
+      <span class="badge bg-orange-subtle text-orange font-mono">WhatsApp Marketing Center</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+        <thead class="table-light">
+          <tr>
+            <th>Photo Banner &amp; Offer Title</th>
+            <th>Description / Terms</th>
+            <th class="text-center">Validity Period</th>
+            <th class="text-center">Status</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="offersTableBody">
+          {% for offer in offers %}
+          <tr>
+            <td class="fw-bold text-dark" style="min-width: 240px;">
+              <div class="d-flex align-items-center gap-3">
+                {% if offer.image %}
+                  <img src="{{ url_for('main.uploaded_file', filename=offer.image) }}" alt="Offer Banner" class="rounded border shadow-sm" style="width: 58px; height: 58px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+                  <div class="rounded bg-orange-subtle text-orange d-none align-items-center justify-content-center fw-bold" style="width: 58px; height: 58px; font-size: 1.4rem;">🖼️</div>
+                {% else %}
+                  <div class="rounded bg-orange-subtle text-orange d-flex align-items-center justify-content-center fw-bold" style="width: 58px; height: 58px; font-size: 1.4rem;">🖼️</div>
+                {% endif %}
+                <div>
+                  <div class="fw-bold text-dark">{{ offer.title }}</div>
+                  {% if offer.image %}
+                    <a href="{{ url_for('main.uploaded_file', filename=offer.image) }}" target="_blank" class="badge bg-success-subtle text-success text-decoration-none mt-1" style="font-size: 0.7rem;">🖼️ Photo Banner Attached</a>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td class="text-muted small" style="max-width: 300px;">
+              {{ offer.description or 'No description details provided.' }}
+            </td>
+            <td class="text-center font-mono small" style="min-width: 160px;">
+              <span class="badge bg-light text-dark border">{{ offer.start_date }} → {{ offer.end_date }}</span>
+            </td>
+            <td class="text-center">
+              {% if offer.active %}
+                <span class="badge bg-success-subtle text-success">● Active</span>
+              {% else %}
+                <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <div class="d-flex justify-content-center gap-1">
+                <!-- Bulk Send WhatsApp Offer Button -->
+                <button type="button" class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 bulk-wa-offer-btn"
+                        data-id="{{ offer.id }}"
+                        data-title="{{ offer.title }}"
+                        data-desc="{{ offer.description }}"
+                        data-start="{{ offer.start_date }}"
+                        data-end="{{ offer.end_date }}"
+                        data-image="{{ offer.image }}"
+                        title="Send Offer via WhatsApp">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  <span>Bulk WhatsApp</span>
+                </button>
+
+                <!-- Edit Offer Button -->
+                <a href="{{ url_for('main.edit_offer', offer_id=offer.id) }}" class="btn btn-sm btn-outline-primary" title="Edit Offer">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </a>
+
+                <!-- Delete Offer Button -->
+                {% if current_user.role and current_user.role.name == 'Admin' %}
+                <form method="POST" action="{{ url_for('main.delete_offer', offer_id=offer.id) }}" onsubmit="return confirm('Delete offer campaign?');" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Offer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" class="text-center py-5 text-muted">
+              <div class="mb-2" style="font-size: 2rem;">🎁</div>
+              <p class="mb-1 fw-bold text-dark">No promotional offers configured yet.</p>
+              <p class="small text-muted mb-3">Create your first offer campaign with a photo banner to start sending discount messages to customer contacts via WhatsApp.</p>
+              <a href="{{ url_for('main.add_offer') }}" class="btn btn-orange-primary btn-sm">+ Create First Offer</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk WhatsApp Broadcast Center Modal -->
+<div class="modal fade" id="bulkWhatsAppOfferModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-success text-white py-3">
+        <h5 class="modal-title fw-bold d-flex align-items-center gap-2 mb-0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          📢 Bulk WhatsApp Marketing Broadcast Center
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <div class="row g-4">
+
+          <!-- Left Column: Offer Photo Banner & Message Preview -->
+          <div class="col-lg-5">
+            <div class="border rounded-3 p-3 bg-light h-100">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold text-dark mb-0">🖼️ Offer Photo Banner &amp; Message</h6>
+                <button type="button" id="copyOfferTextBtn" class="btn btn-outline-secondary btn-sm py-1 font-mono" style="font-size: 0.75rem;" title="Copy Message Text">
+                  📋 Copy Message
+                </button>
+              </div>
+
+              <!-- Photo Banner Container -->
+              <div id="modalOfferImageWrapper" class="mb-3 text-center d-none">
+                <img id="modalOfferImagePreview" src="" alt="Offer Banner Photo" class="img-fluid rounded border shadow-sm mb-2" style="max-height: 180px; width: 100%; object-fit: cover;">
+                <div class="d-flex justify-content-center gap-2">
+                  <a id="modalOfferImageLink" href="#" target="_blank" class="btn btn-outline-success btn-sm py-1 font-mono" style="font-size: 0.75rem;">
+                    🖼️ View Photo Banner Link
+                  </a>
+                </div>
+              </div>
+
+              <!-- Offer Text Preview -->
+              <div class="mb-3">
+                <label for="bulkOfferMsgPreview" class="form-label fw-bold small">WhatsApp Message Content (Editable)</label>
+                <textarea id="bulkOfferMsgPreview" class="form-control font-mono" rows="7" style="font-size: 0.84rem;"></textarea>
+              </div>
+
+              <div class="alert alert-success py-2 px-3 mb-0 font-mono small d-flex align-items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Select recipient numbers and click Send via WhatsApp Web/App or Cloud API below.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Contacts Selection & Dispatch Options -->
+          <div class="col-lg-7">
+            <div class="border rounded-3 p-3 bg-white h-100">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark mb-0">🎯 Target Recipients</h6>
+                <button type="button" class="btn btn-outline-success btn-sm font-mono py-1" data-bs-toggle="modal" data-bs-target="#importContactsModal">
+                  📥 Import Contacts CSV
+                </button>
+              </div>
+
+              <!-- Contact Selection Tabs -->
+              <ul class="nav nav-pills mb-3" id="contactTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active btn-sm font-mono fw-bold" id="saved-contacts-tab" data-bs-toggle="pill" data-bs-target="#saved-contacts-pane" type="button" role="tab">
+                    📋 Saved Contacts (<span id="savedContactsCountSpan">{{ customers|length }}</span>)
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link btn-sm font-mono fw-bold" id="bulk-numbers-tab" data-bs-toggle="pill" data-bs-target="#bulk-numbers-pane" type="button" role="tab">
+                    🔢 Paste Multiple Numbers
+                  </button>
+                </li>
+              </ul>
+
+              <div class="tab-content" id="contactTabContent">
+                <!-- Tab 1: Saved Contacts Checklist -->
+                <div class="tab-pane fade show active" id="saved-contacts-pane" role="tabpanel">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="form-check mb-0">
+                      <input class="form-check-input" type="checkbox" id="selectAllContactsCheck">
+                      <label class="form-check-label fw-bold small text-dark" for="selectAllContactsCheck">
+                        Select All Contacts
+                      </label>
+                    </div>
+                    <input type="text" id="contactSearchFilter" class="form-control form-control-sm w-50" placeholder="Filter contacts...">
+                  </div>
+
+                  <div class="border rounded p-2 bg-light" style="max-height: 190px; overflow-y: auto;" id="contactsChecklistContainer">
+                    {% for c in customers %}
+                    <div class="form-check py-1 border-bottom contact-item-row d-flex justify-content-between align-items-center" data-search="{{ c.name|lower }} {{ c.phone }}">
+                      <div>
+                        <input class="form-check-input contact-cb" type="checkbox" value="{{ c.phone }}" data-name="{{ c.name }}" id="cust_cb_{{ loop.index }}">
+                        <label class="form-check-label small text-dark me-2" for="cust_cb_{{ loop.index }}">
+                          <span class="fw-semibold">{{ c.name }}</span>
+                        </label>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="font-mono text-muted small">{{ c.phone }}</span>
+                        <button type="button" class="btn btn-sm btn-outline-success py-0 px-1 single-wa-send-btn" data-phone="{{ c.phone }}" data-name="{{ c.name }}" title="Send WhatsApp to this contact" style="font-size: 0.72rem;">
+                          💬 Chat
+                        </button>
+                      </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted small py-3" id="noContactsMsg">No saved customer contacts. Click 'Import Contacts' above to add contacts from CSV or text.</div>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <!-- Tab 2: Paste Multiple Numbers -->
+                <div class="tab-pane fade" id="bulk-numbers-pane" role="tabpanel">
+                  <label for="pastedBulkNumbers" class="form-label fw-bold small">Paste Phone Numbers (Separated by comma or new lines)</label>
+                  <textarea id="pastedBulkNumbers" class="form-control font-mono" rows="5" placeholder="e.g.&#10;9876543210&#10;9988776655&#10;9123456789"></textarea>
+                </div>
+              </div>
+
+              <!-- Dispatch Controls Bar -->
+              <div class="mt-3 pt-3 border-top">
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                  <span class="badge bg-success-subtle text-success fs-6 font-mono p-2">
+                    Recipients: <strong id="selectedRecipientCount">0</strong>
+                  </span>
+                  
+                  <div class="d-flex gap-2">
+                    <!-- WhatsApp Web / Desktop App Sender Button -->
+                    <button type="button" id="startWhatsAppWebSendBtn" class="btn btn-success fw-bold btn-sm d-inline-flex align-items-center gap-1">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                      <span>💬 Send via WhatsApp Web / App</span>
+                    </button>
+
+                    <!-- Cloud API Direct Sender Button -->
+                    <button type="button" id="startDirectBulkSendBtn" class="btn btn-outline-success fw-bold btn-sm d-inline-flex align-items-center gap-1">
+                      <span>⚡ Cloud API Direct</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- In-App Progress & Log Container -->
+                <div id="dispatchProgressWrapper" class="d-none mt-2">
+                  <div class="d-flex justify-content-between small font-mono fw-bold mb-1">
+                    <span id="dispatchProgressStatus">Sending Bulk Messages...</span>
+                    <span id="dispatchProgressPercent">0%</span>
+                  </div>
+                  <div class="progress mb-2" style="height: 10px;">
+                    <div id="dispatchProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%;"></div>
+                  </div>
+                  <div id="dispatchResultLog" class="border rounded p-2 bg-dark text-white font-mono small" style="max-height: 100px; overflow-y: auto; font-size: 0.74rem;"></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Import Contacts Modal -->
+<div class="modal fade" id="importContactsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white py-2">
+        <h6 class="modal-title fw-bold mb-0">📥 Import Customer Contacts (CSV / Text)</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="importCsvFile" class="form-label small fw-bold">Upload CSV / TXT File</label>
+          <input type="file" class="form-control form-control-sm" id="importCsvFile" accept=".csv, .txt">
+        </div>
+        <div class="mb-3">
+          <label for="importTextData" class="form-label small fw-bold">OR Paste Contacts (Name, Phone, Email)</label>
+          <textarea class="form-control font-mono" id="importTextData" rows="5" placeholder="Name, Phone, Email&#10;Rahul Kumar, 9876543210, rahul@example.com&#10;Sneha Sharma, 9988776655, sneha@example.com"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="submitImportContactsBtn" class="btn btn-primary btn-sm">Import Contacts</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    let currentOffer = {};
+
+    // Open Modal
+    document.querySelectorAll('.bulk-wa-offer-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            currentOffer = {
+                id: this.dataset.id,
+                title: this.dataset.title,
+                desc: this.dataset.desc,
+                start: this.dataset.start,
+                end: this.dataset.end,
+                image: this.dataset.image
+            };
+
+            // Photo Banner Setup
+            const imgWrapper = document.getElementById('modalOfferImageWrapper');
+            const imgPreview = document.getElementById('modalOfferImagePreview');
+            const imgLink = document.getElementById('modalOfferImageLink');
+
+            if (currentOffer.image) {
+                const fullImgUrl = window.location.origin + '/uploads/' + currentOffer.image;
+                imgPreview.src = fullImgUrl;
+                imgLink.href = fullImgUrl;
+                imgWrapper.classList.remove('d-none');
+            } else {
+                imgWrapper.classList.add('d-none');
+            }
+
+            updateBulkMsgText();
+            const modal = new bootstrap.Modal(document.getElementById('bulkWhatsAppOfferModal'));
+            modal.show();
+        });
+    });
+
+    function updateBulkMsgText() {
+        const imgNotice = currentOffer.image ? `\n🖼️ *Photo Banner:* ${window.location.origin + '/uploads/' + currentOffer.image}\n` : '';
+        const msg = 
+`🎉 *Special Offer from VEMA Home Appliances!*
+
+*${currentOffer.title || 'Exclusive Offer'}*
+${currentOffer.desc || 'Special promotional discount on home appliances.'}
+${imgNotice}
+*Validity:* ${currentOffer.start || 'Today'} to ${currentOffer.end || 'Limited Time'}
+
+Visit our store or call us today to claim this offer!`;
+
+        document.getElementById('bulkOfferMsgPreview').value = msg;
+    }
+
+    // Copy Message Text Button
+    document.getElementById('copyOfferTextBtn').addEventListener('click', function() {
+        const msg = document.getElementById('bulkOfferMsgPreview').value;
+        navigator.clipboard.writeText(msg).then(() => {
+            alert('Offer message and photo banner link copied to clipboard!');
+        });
+    });
+
+    // Select All Contacts Handler
+    const selectAllCheck = document.getElementById('selectAllContactsCheck');
+
+    if (selectAllCheck) {
+        selectAllCheck.addEventListener('change', function() {
+            document.querySelectorAll('.contact-cb').forEach(cb => {
+                if (cb.closest('.contact-item-row').style.display !== 'none') {
+                    cb.checked = selectAllCheck.checked;
+                }
+            });
+            updateRecipientCount();
+        });
+    }
+
+    document.getElementById('contactsChecklistContainer').addEventListener('change', function(e) {
+        if (e.target.classList.contains('contact-cb')) updateRecipientCount();
+    });
+
+    document.getElementById('pastedBulkNumbers').addEventListener('input', updateRecipientCount);
+
+    function getSelectedPhoneNumbers() {
+        let phones = [];
+        document.querySelectorAll('.contact-cb').forEach(cb => {
+            if (cb.checked && cb.value) phones.push(cb.value.trim());
+        });
+
+        const textVal = document.getElementById('pastedBulkNumbers').value;
+        if (textVal) {
+            const pasted = textVal.split(/[\n,;]/).map(p => p.trim()).filter(p => p.length >= 8);
+            pasted.forEach(p => {
+                if (!phones.includes(p)) phones.push(p);
+            });
+        }
+        return phones;
+    }
+
+    function updateRecipientCount() {
+        const phones = getSelectedPhoneNumbers();
+        document.getElementById('selectedRecipientCount').textContent = phones.length;
+    }
+
+    // Individual Chat Send Button Handler
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('single-wa-send-btn') || e.target.closest('.single-wa-send-btn')) {
+            const btn = e.target.classList.contains('single-wa-send-btn') ? e.target : e.target.closest('.single-wa-send-btn');
+            let phone = btn.dataset.phone.replace(/[^0-9]/g, '');
+            if (phone.length === 10) phone = '91' + phone;
+
+            const msgText = document.getElementById('bulkOfferMsgPreview').value.trim();
+            const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msgText)}`;
+            window.open(url, '_blank');
+        }
+    });
+
+    // Contact Search Filter
+    const searchFilter = document.getElementById('contactSearchFilter');
+    if (searchFilter) {
+        searchFilter.addEventListener('input', function() {
+            const q = this.value.toLowerCase().trim();
+            document.querySelectorAll('.contact-item-row').forEach(row => {
+                const text = row.dataset.search || '';
+                row.style.display = text.includes(q) ? '' : 'none';
+            });
+        });
+    }
+
+    // Import Contacts Handler
+    document.getElementById('submitImportContactsBtn').addEventListener('click', function() {
+        const fileInput = document.getElementById('importCsvFile');
+        const textData = document.getElementById('importTextData').value.trim();
+
+        const formData = new FormData();
+        if (fileInput.files.length > 0) {
+            formData.append('file', fileInput.files[0]);
+        } else if (textData) {
+            formData.append('text_data', textData);
+        } else {
+            alert('Please select a CSV file or paste contact text data.');
+            return;
+        }
+
+        fetch('/api/customers/import', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                const container = document.getElementById('contactsChecklistContainer');
+                document.getElementById('savedContactsCountSpan').textContent = data.customers.length;
+
+                container.innerHTML = data.customers.map((c, idx) => `
+                    <div class="form-check py-1 border-bottom contact-item-row d-flex justify-content-between align-items-center" data-search="${c.name.toLowerCase()} ${c.phone}">
+                      <div>
+                        <input class="form-check-input contact-cb" type="checkbox" value="${c.phone}" data-name="${c.name}" id="cust_cb_imp_${idx}">
+                        <label class="form-check-label small text-dark me-2" for="cust_cb_imp_${idx}">
+                          <span class="fw-semibold">${c.name}</span>
+                        </label>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="font-mono text-muted small">${c.phone}</span>
+                        <button type="button" class="btn btn-sm btn-outline-success py-0 px-1 single-wa-send-btn" data-phone="${c.phone}" data-name="${c.name}" title="Send WhatsApp to this contact" style="font-size: 0.72rem;">
+                          💬 Chat
+                        </button>
+                      </div>
+                    </div>
+                `).join('');
+
+                const modal = bootstrap.Modal.getInstance(document.getElementById('importContactsModal'));
+                if (modal) modal.hide();
+                updateRecipientCount();
+            } else {
+                alert(data.error || 'Failed to import contacts.');
+            }
+        })
+        .catch(err => alert('Error importing contacts.'));
+    });
+
+    // OPTION A: WHATSAPP WEB / DESKTOP APP SENDER (Opens Pre-filled WhatsApp Chat!)
+    document.getElementById('startWhatsAppWebSendBtn').addEventListener('click', function() {
+        const phones = getSelectedPhoneNumbers();
+        if (phones.length === 0) {
+            alert('Please select at least one contact or enter phone numbers.');
+            return;
+        }
+
+        const msgText = document.getElementById('bulkOfferMsgPreview').value.trim();
+        const progressWrapper = document.getElementById('dispatchProgressWrapper');
+        const progressBar = document.getElementById('dispatchProgressBar');
+        const progressPercent = document.getElementById('dispatchProgressPercent');
+        const progressStatus = document.getElementById('dispatchProgressStatus');
+        const resultLog = document.getElementById('dispatchResultLog');
+
+        progressWrapper.classList.remove('d-none');
+        progressBar.style.width = '100%';
+        progressPercent.textContent = '100%';
+        progressStatus.textContent = '💬 WhatsApp Web Chat Ready!';
+
+        let logHtml = `<div class="text-success fw-bold mb-2">WhatsApp Chat Links Ready for ${phones.length} Recipient(s):</div>`;
+
+        phones.forEach((p, idx) => {
+            let cleanPhone = p.replace(/[^0-9]/g, '');
+            if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+
+            const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msgText)}`;
+            logHtml += `
+                <div class="p-2 mb-2 bg-secondary rounded d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong class="text-white">Recipient ${idx+1}:</strong> <span class="font-mono text-warning">${cleanPhone}</span>
+                    </div>
+                    <a href="${url}" target="_blank" class="btn btn-success btn-sm font-mono fw-bold py-1 px-3">
+                        💬 Open Chat &amp; Send Message
+                    </a>
+                </div>
+            `;
+
+            // Open first recipient chat immediately without timeout to bypass browser popup blockers
+            if (idx === 0) {
+                window.open(url, '_blank');
+            } else {
+                setTimeout(() => { window.open(url, '_blank'); }, idx * 800);
+            }
+        });
+
+        resultLog.innerHTML = logHtml;
+    });
+
+    // OPTION B: CLOUD API DIRECT DISPATCH
+    document.getElementById('startDirectBulkSendBtn').addEventListener('click', function() {
+        const phones = getSelectedPhoneNumbers();
+        if (phones.length === 0) {
+            alert('Please select at least one contact or enter phone numbers.');
+            return;
+        }
+
+        const msgText = document.getElementById('bulkOfferMsgPreview').value.trim();
+        if (!confirm(`Dispatch offer directly via backend API to ${phones.length} recipient(s)?`)) return;
+
+        const progressWrapper = document.getElementById('dispatchProgressWrapper');
+        const progressBar = document.getElementById('dispatchProgressBar');
+        const progressPercent = document.getElementById('dispatchProgressPercent');
+        const progressStatus = document.getElementById('dispatchProgressStatus');
+        const resultLog = document.getElementById('dispatchResultLog');
+
+        progressWrapper.classList.remove('d-none');
+        progressBar.style.width = '20%';
+        progressPercent.textContent = '20%';
+        progressStatus.textContent = `Connecting to API Engine...`;
+        resultLog.innerHTML = `<div class="text-info">Initiating Cloud API dispatch to ${phones.length} contacts...</div>`;
+
+        fetch('/api/whatsapp/send-bulk-offer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                offer_id: currentOffer.id,
+                recipients: phones,
+                message: msgText,
+                image_filename: currentOffer.image
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                progressBar.style.width = '100%';
+                progressPercent.textContent = '100%';
+                progressStatus.textContent = '✅ API Dispatch Processed!';
+
+                let logHtml = `<div class="text-success fw-bold mb-1">${data.message}</div>`;
+                if (!data.cloud_api_configured) {
+                    logHtml += `<div class="alert alert-warning py-1 px-2 my-1 font-mono" style="font-size: 0.75rem;">💡 Tip: To send automated background messages without user clicking, configure your Meta Cloud API Token under Settings. Otherwise, click "💬 Send via WhatsApp Web / App" above to deliver messages directly!</div>`;
+                }
+
+                data.results.forEach(r => {
+                    if (r.status === 'Sent') {
+                        logHtml += `<div class="text-success">✔ ${r.phone}: Dispatched (${r.note || 'API Engine'})</div>`;
+                    } else {
+                        logHtml += `<div class="text-danger">✖ ${r.phone}: Failed (${r.error || 'Error'})</div>`;
+                    }
+                });
+                resultLog.innerHTML = logHtml;
+            } else {
+                progressBar.classList.remove('bg-success');
+                progressBar.classList.add('bg-danger');
+                progressStatus.textContent = 'Broadcast Error';
+                resultLog.innerHTML = `<div class="text-danger">Error: ${data.error || 'Failed to dispatch bulk messages'}</div>`;
+            }
+        })
+        .catch(err => {
+            progressBar.classList.remove('bg-success');
+            progressBar.classList.add('bg-danger');
+            progressStatus.textContent = 'Network Error';
+            resultLog.innerHTML = `<div class="text-danger">Network error connecting to bulk dispatch API.</div>`;
+        });
+    });
+});
+</script>
+{% endblock %}

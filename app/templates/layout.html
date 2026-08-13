@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VEMA — Vendor Management CRM</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='vema-tab-logo.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='vema-tab-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='vema-tab-logo.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='vema-tab-logo.png') }}">
+    <!-- Fonts & Styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/styles.css') }}?v=20260812h" rel="stylesheet">
+  </head>
+  <body    {% if current_user.is_authenticated %}
+    <div class="d-flex min-vh-100">
+      
+      <!-- Responsive Sidebar (Offcanvas on Mobile/Tablet, Fixed on Desktop) -->
+      <aside class="offcanvas-lg offcanvas-start app-sidebar-orange flex-column" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <!-- Mobile Offcanvas Header -->
+        <div class="offcanvas-header d-flex d-lg-none justify-content-between align-items-center p-3 border-bottom border-white border-opacity-10">
+          <a href="{{ url_for('main.dashboard') }}" class="d-block">
+            <img src="{{ url_for('static', filename='vema-logo.png') }}" alt="VEMA Logo" style="height: 40px; filter: brightness(0) invert(1);">
+          </a>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas" aria-label="Close"></button>
+        </div>
+
+        <!-- Logo Header (Desktop) -->
+        <div class="sidebar-header-orange d-none d-lg-block">
+          <a href="{{ url_for('main.dashboard') }}" class="d-block text-center">
+            <img src="{{ url_for('static', filename='vema-logo.png') }}" alt="VEMA Logo" class="sidebar-brand-logo-white">
+          </a>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="sidebar-nav-orange">
+          <a class="nav-item-link {% if request.path == url_for('main.dashboard') %}active{% endif %}" href="{{ url_for('main.dashboard') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            <span>Dashboard</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.purchase_track')) %}active{% endif %}" href="{{ url_for('main.purchase_track') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <span>Purchase Track</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.vendors')) %}active{% endif %}" href="{{ url_for('main.vendors') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Vendors</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.purchases')) %}active{% endif %}" href="{{ url_for('main.purchases') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/></svg>
+            <span>Purchase Orders</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.grn_list')) %}active{% endif %}" href="{{ url_for('main.grn_list') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M21 8-9-4-9 4 9 4 9-4z"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/></svg>
+            <span>Goods Received</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.invoices')) %}active{% endif %}" href="{{ url_for('main.invoices') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>Invoices</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.payments')) %}active{% endif %}" href="{{ url_for('main.payments') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <span>Payments</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.products')) %}active{% endif %}" href="{{ url_for('main.products') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            <span>Products</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.offers')) %}active{% endif %}" href="{{ url_for('main.offers') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            <span>Promotions & Offers</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.reports')) and not request.path.startswith(url_for('main.analytics')) %}active{% endif %}" href="{{ url_for('main.reports') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Reports</span>
+          </a>
+
+          <a class="nav-item-link {% if request.path.startswith(url_for('main.analytics')) %}active{% endif %}" href="{{ url_for('main.analytics') }}">
+            <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span>Analytics</span>
+          </a>
+
+          {% if current_user.role and current_user.role.name == 'Admin' %}
+            <a class="nav-item-link {% if request.path.startswith(url_for('main.users')) %}active{% endif %}" href="{{ url_for('main.users') }}">
+              <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Users</span>
+            </a>
+            <a class="nav-item-link {% if request.path.startswith(url_for('main.settings')) %}active{% endif %}" href="{{ url_for('main.settings') }}">
+              <svg class="sidebar-svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span>Settings</span>
+            </a>
+          {% endif %}
+        </nav>
+
+        <!-- Bottom User Footer -->
+        <div class="sidebar-footer-user">
+          <div class="user-avatar-circle">
+            {% if current_user.role and current_user.role.name == 'Admin' %}
+              <img src="{{ url_for('static', filename='vema-tab-logo.png') }}" alt="Admin" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background-color: #ffffff;">
+            {% else %}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm0 4c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg>
+            {% endif %}
+          </div>
+          <div class="overflow-hidden">
+            <div class="fw-bold text-white text-truncate" style="font-size: 0.9rem;">{{ current_user.name }}</div>
+            <div class="small text-white-50" style="font-size: 0.78rem;">{{ current_user.role.name if current_user.role else 'Admin' }}</div>
+          </div>
+          <a href="/logout" class="ms-auto text-white-50 text-decoration-none" title="Logout">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </a>
+        </div>
+      </aside>
+
+      <!-- Main Layout Workspace -->
+      <div class="flex-grow-1 d-flex flex-column" style="min-width: 0;">
+        
+        {% set page_titles = {
+          'main.dashboard': 'Dashboard',
+          'main.vendors': 'Vendors',
+          'main.add_vendor': 'Register New Vendor',
+          'main.edit_vendor': 'Edit Vendor',
+          'main.vendor_detail': 'Vendor Profile',
+          'main.vendor_ledger': 'Vendor Ledger',
+          'main.purchases': 'Purchase Orders',
+          'main.add_purchase': 'New Purchase Order',
+          'main.view_purchase': 'Purchase Order Detail',
+          'main.edit_purchase': 'Edit Purchase Order',
+          'main.payments': 'Payments',
+          'main.add_payment': 'Record New Payment',
+          'main.view_payment': 'Payment Detail',
+          'main.edit_payment': 'Edit Payment',
+          'main.grn_list': 'Goods Received Notes',
+          'main.add_grn': 'Record Goods Receipt',
+          'main.invoices': 'Invoices',
+          'main.view_invoice': 'Invoice',
+          'main.customers': 'Customers',
+          'main.add_customer': 'Add New Customer',
+          'main.edit_customer': 'Edit Customer',
+          'main.products': 'Products',
+          'main.add_product': 'Add Product',
+          'main.edit_product': 'Edit Product',
+          'main.offers': 'Offers & Promotions',
+          'main.add_offer': 'Create New Offer',
+          'main.edit_offer': 'Edit Offer',
+          'main.reports': 'Reports',
+          'main.reports_aging': 'Overdue & Aging Report',
+          'main.analytics': 'Analytics',
+          'main.users': 'User Management',
+          'main.add_user': 'Add New User',
+          'main.edit_user': 'Edit User',
+          'main.profile': 'My Profile',
+          'auth.profile': 'My Profile',
+          'main.change_password': 'Change Password',
+          'auth.change_password': 'Change Password',
+          'main.settings': 'System Settings'
+        } %}
+
+        {% set page_subtitles = {
+          'main.dashboard': 'Welcome back, ' ~ (current_user.name.split()[0] if current_user.name else 'Administrator') ~ "! Here's what's happening today.",
+          'main.vendors': 'Manage your suppliers and track their account status.',
+          'main.add_vendor': 'Add a new supplier to your records.',
+          'main.edit_vendor': 'Update the supplier information.',
+          'main.vendor_detail': 'Overview of this supplier purchases, payments and balances.',
+          'main.vendor_ledger': 'Complete purchase and payment history for this vendor.',
+          'main.purchases': 'Track all purchase orders and their delivery status.',
+          'main.add_purchase': 'Record a new purchase order.',
+          'main.view_purchase': 'Full details of this purchase order.',
+          'main.edit_purchase': 'Update this purchase order.',
+          'main.payments': 'Record and track payments made to vendors.',
+          'main.add_payment': 'Log a new payment against a vendor.',
+          'main.view_payment': 'Details of this payment record.',
+          'main.edit_payment': 'Update this payment record.',
+          'main.grn_list': 'Match received goods against purchase orders.',
+          'main.add_grn': 'Record goods received against a purchase order.',
+          'main.invoices': 'View and print invoices for each purchase order.',
+          'main.view_invoice': 'Printable invoice for this purchase order.',
+          'main.customers': 'Manage your customer base.',
+          'main.add_customer': 'Register a new customer.',
+          'main.edit_customer': 'Update customer details.',
+          'main.products': 'Manage your product catalogue and stock levels.',
+          'main.add_product': 'Add a new product to inventory.',
+          'main.edit_product': 'Update product details and pricing.',
+          'main.offers': 'Create and manage promotional offers.',
+          'main.add_offer': 'Set up a new promotional offer.',
+          'main.edit_offer': 'Update this promotional offer.',
+          'main.reports': 'View and export summary reports.',
+          'main.reports_aging': 'Overdue vendor balances grouped by age bucket.',
+          'main.analytics': 'Business insights and trends across the catalogue.',
+          'main.users': 'Manage system user accounts and roles.',
+          'main.add_user': 'Create a new system user.',
+          'main.edit_user': 'Update this user account.',
+          'main.profile': 'Your account information.',
+          'auth.profile': 'Your account information.',
+          'main.change_password': 'Update your login password.',
+          'auth.change_password': 'Update your login password.',
+          'main.settings': 'Configure company and application settings.'
+        } %}
+
+        <!-- Clean White Header Navbar -->
+        <header class="top-app-header-clean">
+          <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+              <button class="btn border-0 p-1 d-lg-none me-2 text-dark shadow-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" aria-label="Toggle navigation">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              </button>
+              <div>
+                <h1 class="page-title mb-0" style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">
+                  {% block page_title %}{{ page_titles.get(request.endpoint, 'Dashboard') }}{% endblock %}
+                </h1>
+                <p class="text-muted small mb-0 d-none d-sm-block" style="font-size: 0.78rem;">
+                  {% block page_subtitle %}{{ page_subtitles.get(request.endpoint, '') }}{% endblock %}
+                </p>
+              </div>
+            </div>
+
+            <!-- Top Right Controls -->
+            <div class="d-flex align-items-center gap-3">
+              <!-- Search Bar -->
+              <div class="header-search-box d-none d-md-flex">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" placeholder="Search anything...">
+              </div>
+
+              <!-- Bell Icon (Links to Aging / Overdue Report) -->
+              <a href="{{ url_for('main.reports_aging') }}" class="icon-badge-btn text-dark" title="View Overdue Balances & Alerts">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span class="icon-badge-count bg-danger">!</span>
+              </a>
+
+
+              <!-- User Avatar Dropdown -->
+              <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-decoration-none" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                  {% if current_user.role and current_user.role.name == 'Admin' %}
+                    <img src="{{ url_for('static', filename='vema-tab-logo.png') }}" alt="Admin" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; background-color: #ffffff; border: 1px solid #e2e8f0;">
+                  {% else %}
+                    <div class="rounded-circle bg-secondary bg-opacity-25 d-flex align-items-center justify-content-center text-dark font-mono fw-bold" style="width: 40px; height: 40px;">
+                      {{ current_user.name[:2].upper() if current_user.name else 'AD' }}
+                    </div>
+                  {% endif %}
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="userMenu">
+                  <li><a class="dropdown-item" href="/profile">My Profile</a></li>
+                  <li><a class="dropdown-item" href="/change-password">Change Password</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-danger" href="/logout">Logout</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Main Workspace View -->
+        <main class="content px-4 py-4 flex-grow-1 main-content-container">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, msg in messages %}
+                <div class="alert alert-{{category}} alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+                  {{msg}}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+
+          {% block content %}{% endblock %}
+
+          <!-- Footer -->
+          <footer class="text-center py-4 text-muted small mt-auto border-top">
+            © 2026 VEMA Home Appliances. All rights reserved.
+          </footer>
+        </main>
+      </div>
+    </div>
+    {% else %}
+    <main class="w-100 min-vh-100 p-0 m-0 overflow-hidden position-relative">
+      {% block unauth_content %}{% endblock %}
+    </main>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Dynamic real-time client-side live search for all search inputs
+      const searchInputs = document.querySelectorAll('input[name="q"], .header-search-box input');
+      searchInputs.forEach(input => {
+        const form = input.closest('form');
+        if (form) {
+          input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              return false;
+            }
+          });
+        }
+
+        input.addEventListener('input', function() {
+          const query = this.value.toLowerCase().trim();
+          const tables = document.querySelectorAll('table tbody');
+          tables.forEach(tbody => {
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach(row => {
+              if (row.children.length === 1 && row.textContent.includes('No ')) return;
+              const text = row.textContent.toLowerCase();
+              if (query === '' || text.includes(query)) {
+                row.style.display = '';
+              } else {
+                row.style.display = 'none';
+              }
+            });
+          });
+        });
+      });
+    });
+    </script>
+  </body>
+</html>
