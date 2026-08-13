@@ -133,6 +133,30 @@ class SQLiteStorage:
             if rname not in existing_role_names:
                 self.add_role(Role(name=rname))
 
+        # Auto-seed default users if database has no users (e.g. on fresh deployment)
+        if not self.users:
+            admin_role = self.find_role_by_name('Admin')
+            manager_role = self.find_role_by_name('Manager')
+            accountant_role = self.find_role_by_name('Accountant')
+            staff_role = self.find_role_by_name('Staff')
+
+            if admin_role:
+                admin_u = User(name='VEMA Administrator', email='admin@example.com', phone='9876500001', role_id=admin_role.id)
+                admin_u.set_password('adminpass')
+                self.add_user(admin_u)
+            if manager_role:
+                mgr_u = User(name='Rahul Sharma', email='manager@example.com', phone='9876500002', role_id=manager_role.id)
+                mgr_u.set_password('manager123')
+                self.add_user(mgr_u)
+            if accountant_role:
+                acc_u = User(name='Priya Patel', email='accountant@example.com', phone='9876500003', role_id=accountant_role.id)
+                acc_u.set_password('account123')
+                self.add_user(acc_u)
+            if staff_role:
+                stf_u = User(name='Amit Verma', email='staff@example.com', phone='9876500004', role_id=staff_role.id)
+                stf_u.set_password('staff123')
+                self.add_user(stf_u)
+
 
     def _next_id(self, items):
         return max((item.id or 0 for item in items), default=0) + 1
